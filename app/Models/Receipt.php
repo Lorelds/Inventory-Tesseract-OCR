@@ -14,6 +14,7 @@ class Receipt extends Model
         'transaction_date',
         'total_amount',
         'status',
+        'type',
         'payment_status',
         'validated_by',
         'validated_at',

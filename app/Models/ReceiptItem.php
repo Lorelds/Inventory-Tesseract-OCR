@@ -11,6 +11,7 @@ class ReceiptItem extends Model
         'product_id',
         'product_name',
         'quantity',
+        'measure',
         'unit_price',
         'subtotal',
     ];

@@ -33,12 +33,13 @@
                     </div>
                     
                     <div class="mb-4">
-                        <label for="sku" class="form-label fw-medium">SKU (Barcode) <span class="text-danger">*</span></label>
+                        <label for="category" class="form-label fw-medium">Category</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="ph ph-barcode"></i></span>
-                            <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku" name="sku" value="{{ old('sku') }}" placeholder="e.g. SKU-12345" required>
+                            <span class="input-group-text bg-light"><i class="ph ph-tag"></i></span>
+                            <input type="text" class="form-control @error('category') is-invalid @enderror" id="category" name="category" value="{{ old('category') }}" placeholder="e.g. Paku, Bendrat, Seng">
                         </div>
-                        @error('sku')
+                        <div class="form-text mt-1"><i class="ph ph-info"></i> Group this product. Leave blank if none.</div>
+                        @error('category')
                             <div class="text-danger mt-1 small">{{ $message }}</div>
                         @enderror
                     </div>

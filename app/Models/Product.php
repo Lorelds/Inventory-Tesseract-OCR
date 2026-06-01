@@ -9,6 +9,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'sku',
+        'category',
         'buy_price',
         'sell_price',
         'stock',
@@ -17,5 +18,10 @@ class Product extends Model
     public function receiptItems()
     {
         return $this->hasMany(ReceiptItem::class);
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
     }
 }

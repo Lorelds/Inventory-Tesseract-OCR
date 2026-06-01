@@ -14,6 +14,43 @@
     </div>
 </div>
 
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form action="{{ route('products.index') }}" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">Search Products</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="ph ph-magnifying-glass"></i></span>
+                    <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Search by name or SKU...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small mb-1">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small mb-1">Sort By</label>
+                <select name="sort" class="form-select">
+                    <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest First</option>
+                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name (A-Z)</option>
+                    <option value="stock_high" {{ request('sort') == 'stock_high' ? 'selected' : '' }}>Highest Stock</option>
+                    <option value="stock_low" {{ request('sort') == 'stock_low' ? 'selected' : '' }}>Lowest Stock</option>
+                    <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Highest Price</option>
+                    <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Lowest Price</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="ph-bold ph-funnel me-1"></i> Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -22,6 +59,7 @@
                     <tr>
                         <th class="ps-4">SKU</th>
                         <th>Product Name</th>
+                        <th>Category</th>
                         <th>Buy Price</th>
                         <th>Sell Price</th>
                         <th>Stock</th>
@@ -44,6 +82,13 @@
                                     </a>
                                 </div>
                             </td>
+                            <td>
+                                @if($product->category)
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ $product->category }}</span>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
                             <td>Rp {{ number_format($product->buy_price, 0, ',', '.') }}</td>
                             <td>Rp {{ number_format($product->sell_price, 0, ',', '.') }}</td>
                             <td>
@@ -60,6 +105,7 @@
                                     <a href="{{ route('products.show', $product->id) }}" class="btn btn-sm btn-light text-secondary border" title="View Details">
                                         <i class="ph-bold ph-eye"></i>
                                     </a>
+                                    @if(auth()->check() && auth()->user()->role === 'super_admin')
                                     <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-light text-primary border" title="Edit">
                                         <i class="ph-bold ph-pencil-simple"></i>
                                     </a>
@@ -70,12 +116,13 @@
                                             <i class="ph-bold ph-trash"></i>
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5">
+                            <td colspan="7" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="ph-fill ph-package fs-1 mb-2"></i>
                                     <p class="mb-0">No products found. Start by adding a new product manually or scan a receipt.</p>

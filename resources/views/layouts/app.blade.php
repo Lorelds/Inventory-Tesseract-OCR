@@ -24,7 +24,7 @@
                 <span>OCR Inventory</span>
             </div>
             <nav class="sidebar-menu">
-                <a href="{{ url('/') }}" class="{{ request()->is('/') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="ph ph-squares-four fs-5"></i> Dashboard
                 </a>
                 <a href="{{ route('admin.receipts.index') }}" class="{{ request()->routeIs('admin.receipts.*') ? 'active' : '' }}">
@@ -55,8 +55,15 @@
                         <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                     </div>
                     <div class="d-flex align-items-center gap-2 ms-3">
-                        <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" alt="User" class="rounded-circle" width="36" height="36">
-                        <span class="fw-medium">Admin User</span>
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}&background=0ea5e9&color=fff" alt="User" class="rounded-circle" width="36" height="36">
+                        <span class="fw-medium">{{ auth()->user()->name ?? 'User' }}</span>
+                        
+                        <form method="POST" action="{{ route('logout') }}" class="ms-3">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="ph-bold ph-sign-out me-1"></i> Logout
+                            </button>
+                        </form>
                     </div>
                 </div>
             </header>

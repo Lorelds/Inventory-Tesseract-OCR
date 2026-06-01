@@ -40,55 +40,127 @@
                             <span class="badge bg-success bg-opacity-25 text-success border border-success fs-6"><i class="ph-fill ph-check-circle"></i> {{ $product->stock }}</span>
                         @endif
                     </div>
+                    <div class="p-3 bg-light rounded-3 text-start mt-4">
+                        <div class="text-muted small fw-medium mb-3 text-uppercase tracking-wider border-bottom pb-2">Information Overview</div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Product ID</span>
+                            <span class="fw-medium small">#{{ $product->id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Buy Price</span>
+                            <span class="fw-medium small text-danger">Rp {{ number_format($product->buy_price, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Sell Price</span>
+                            <span class="fw-medium small text-success">Rp {{ number_format($product->sell_price, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Margin</span>
+                            <span class="fw-medium small text-primary">
+                                @if($product->buy_price > 0)
+                                    {{ number_format((($product->sell_price - $product->buy_price) / $product->buy_price) * 100, 1) }}%
+                                @else
+                                    100%
+                                @endif
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 mt-3 pt-2 border-top">
+                            <span class="text-muted small">Date Added</span>
+                            <span class="fw-medium small">{{ $product->created_at->format('d M Y') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Last Updated</span>
+                            <span class="fw-medium small">{{ $product->updated_at->format('d M Y') }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-8">
-        <!-- Details Card -->
-        <div class="card border-0 shadow-sm h-100">
+        <!-- Price History Graph -->
+        <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                <h5 class="fw-semibold text-dark"><i class="ph ph-info me-2"></i> Information Overview</h5>
+                <h5 class="fw-semibold text-dark"><i class="ph ph-trend-up me-2"></i> Price History</h5>
+                <p class="text-muted small mb-0">Track purchase price changes over time based on scanned receipts.</p>
             </div>
             <div class="card-body p-4">
-                <table class="table table-borderless">
-                    <tbody>
-                        <tr>
-                            <td class="text-muted" style="width: 150px;">Product ID</td>
-                            <td class="fw-medium">#{{ $product->id }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Buy Price</td>
-                            <td class="fw-medium text-danger">Rp {{ number_format($product->buy_price, 2, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Sell Price</td>
-                            <td class="fw-medium text-success">Rp {{ number_format($product->sell_price, 2, ',', '.') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Profit Margin</td>
-                            <td class="fw-medium text-primary">
-                                @if($product->buy_price > 0)
-                                    {{ number_format((($product->sell_price - $product->buy_price) / $product->buy_price) * 100, 1) }}%
-                                @else
-                                    100%
-                                @endif
-                                (Rp {{ number_format($product->sell_price - $product->buy_price, 0, ',', '.') }})
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Date Added</td>
-                            <td class="fw-medium">{{ $product->created_at->format('d M Y, H:i') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Last Updated</td>
-                            <td class="fw-medium">{{ $product->updated_at->format('d M Y, H:i') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="priceHistoryChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('priceHistoryChart').getContext('2d');
+        const labels = @json($price_history_dates);
+        const data = @json($price_history_values);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Buy Price (Rp)',
+                    data: data,
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.2,
+                    pointBackgroundColor: '#0ea5e9',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value, index, values) {
+                                if(value >= 1000000) {
+                                    return 'Rp ' + (value / 1000000) + 'M';
+                                } else if(value >= 1000) {
+                                    return 'Rp ' + (value / 1000) + 'k';
+                                }
+                                return 'Rp ' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+@endpush

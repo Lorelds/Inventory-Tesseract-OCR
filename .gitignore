@@ -56,3 +56,10 @@ walkthrough.md
 test_bootstrap.php
 test_reflection.php
 version_test.php
+test.php
+test2.php
+test3.php
+test4.php
+dump.php
+test_ocr*.php
+test_regex.php

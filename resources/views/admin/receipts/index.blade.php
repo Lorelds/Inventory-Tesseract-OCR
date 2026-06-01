@@ -14,6 +14,32 @@
     </div>
 </div>
 
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form action="{{ route('admin.receipts.index') }}" method="GET" class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Search Receipts</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="ph ph-magnifying-glass"></i></span>
+                    <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Search by ID, Status, or Store Name...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small mb-1">Sort By</label>
+                <select name="sort" class="form-select">
+                    <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest First</option>
+                    <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                    <option value="highest_amount" {{ request('sort') == 'highest_amount' ? 'selected' : '' }}>Highest Amount</option>
+                    <option value="lowest_amount" {{ request('sort') == 'lowest_amount' ? 'selected' : '' }}>Lowest Amount</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="ph-bold ph-funnel me-1"></i> Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -62,9 +88,20 @@
                                         <i class="ph-bold ph-check-square-offset"></i> Validate
                                     </a>
                                 @else
-                                    <a href="{{ route('admin.receipts.show', $receipt->id) }}" class="btn btn-sm btn-light border text-primary">
-                                        <i class="ph-bold ph-eye"></i> View Details
-                                    </a>
+                                    <div class="btn-group">
+                                        <a href="{{ route('admin.receipts.show', $receipt->id) }}" class="btn btn-sm btn-light border text-primary">
+                                            <i class="ph-bold ph-eye"></i> View Details
+                                        </a>
+                                        @if(auth()->check() && auth()->user()->role === 'super_admin')
+                                        <form action="{{ route('admin.receipts.destroy', $receipt->id) }}" method="POST" class="d-inline" onsubmit="return confirm('WARNING: Deleting this receipt will subtract the items from inventory and reverse vendor debts! Are you absolutely sure?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-light border text-danger" title="Delete Receipt">
+                                                <i class="ph-bold ph-trash"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </div>
                                 @endif
                             </td>
                         </tr>

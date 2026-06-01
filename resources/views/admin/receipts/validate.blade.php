@@ -91,11 +91,13 @@
                         <table class="table table-bordered align-middle" id="itemsTable">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Item Name</th>
-                                    <th style="width: 90px;">Qty</th>
-                                    <th style="width: 140px;">Unit Price</th>
-                                    <th style="width: 140px;">Subtotal</th>
-                                    <th style="width: 50px;"></th>
+                                    <th style="width: 25%">Item Name</th>
+                                    <th style="width: 15%">Category <small class="text-muted fw-normal">(Optional)</small></th>
+                                    <th style="width: 12%">Qty</th>
+                                    <th style="width: 13%">M/Kg <small class="text-muted fw-normal">(Optional)</small></th>
+                                    <th style="width: 15%">Unit Price</th>
+                                    <th style="width: 15%">Subtotal</th>
+                                    <th style="width: 5%"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -106,16 +108,22 @@
                                 @forelse($items as $index => $item)
                                     <tr class="item-row">
                                         <td>
-                                            <input type="text" class="form-control" name="items[{{ $index }}][name]" value="{{ $item['name'] }}" required>
+                                            <input type="text" class="form-control" name="items[{{ $index }}][name]" value="{{ old('items.'.$index.'.name', $item['name'] ?? '') }}" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="1" min="1" class="form-control qty-input" name="items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}" required>
+                                            <input type="text" class="form-control" name="items[{{ $index }}][category]" value="{{ old('items.'.$index.'.category') }}" list="categoryList" placeholder="e.g. Paku">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control price-input" name="items[{{ $index }}][unit_price]" value="{{ $item['unit_price'] }}" required>
+                                            <input type="number" step="1" min="1" class="form-control qty-input" name="items[{{ $index }}][quantity]" value="{{ old('items.'.$index.'.quantity', $item['quantity'] ?? 1) }}" required>
                                         </td>
                                         <td>
-                                            <input type="number" class="form-control subtotal-input bg-light" value="{{ (float)$item['quantity'] * (float)$item['unit_price'] }}" readonly tabindex="-1">
+                                            <input type="number" step="0.01" min="0.01" class="form-control measure-input" name="items[{{ $index }}][measure]" value="{{ old('items.'.$index.'.measure', $item['measure'] ?? 1) }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" class="form-control price-input" name="items[{{ $index }}][unit_price]" value="{{ old('items.'.$index.'.unit_price', $item['unit_price'] ?? 0) }}" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control subtotal-input bg-light" value="{{ (float)($item['quantity'] ?? 1) * (float)($item['measure'] ?? 1) * (float)($item['unit_price'] ?? 0) }}" readonly tabindex="-1">
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-light text-danger remove-item-btn"><i class="ph-bold ph-trash"></i></button>
@@ -123,7 +131,7 @@
                                     </tr>
                                 @empty
                                     <tr id="noItemsRow">
-                                        <td colspan="5" class="text-center text-muted py-3">
+                                        <td colspan="7" class="text-center text-muted py-3">
                                             No items were automatically detected. Please add them manually.
                                         </td>
                                     </tr>
@@ -152,7 +160,9 @@
 <template id="itemRowTemplate">
     <tr class="item-row">
         <td><input type="text" class="form-control" name="items[__INDEX__][name]" required></td>
+        <td><input type="text" class="form-control" name="items[__INDEX__][category]" list="categoryList" placeholder="e.g. Paku"></td>
         <td><input type="number" step="1" min="1" class="form-control qty-input" name="items[__INDEX__][quantity]" value="1" required></td>
+        <td><input type="number" step="0.01" min="0.01" class="form-control measure-input" name="items[__INDEX__][measure]" value="1"></td>
         <td><input type="number" step="0.01" class="form-control price-input" name="items[__INDEX__][unit_price]" value="0" required></td>
         <td><input type="number" class="form-control subtotal-input bg-light" value="0" readonly tabindex="-1"></td>
         <td class="text-center">
@@ -160,6 +170,12 @@
         </td>
     </tr>
 </template>
+<datalist id="categoryList">
+    @foreach($categories as $cat)
+        <option value="{{ $cat }}">
+    @endforeach
+</datalist>
+
 @endsection
 
 @push('scripts')
@@ -172,8 +188,10 @@
             let overallTotal = 0;
             document.querySelectorAll('.item-row').forEach(row => {
                 const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+                const measureInput = row.querySelector('.measure-input').value;
+                const measure = measureInput === '' ? 1 : (parseFloat(measureInput) || 1);
                 const price = parseFloat(row.querySelector('.price-input').value) || 0;
-                const subtotal = qty * price;
+                const subtotal = qty * price * measure;
                 
                 row.querySelector('.subtotal-input').value = subtotal.toFixed(2);
                 overallTotal += subtotal;
@@ -184,7 +202,7 @@
 
         // Listen for input changes to dynamically update subtotal
         document.getElementById('itemsTable').addEventListener('input', function(e) {
-            if (e.target.classList.contains('qty-input') || e.target.classList.contains('price-input')) {
+            if (e.target.classList.contains('qty-input') || e.target.classList.contains('price-input') || e.target.classList.contains('measure-input')) {
                 updateSubtotalsAndTotal();
             }
         });
@@ -212,11 +230,40 @@
                 // If no rows left, add the empty message back
                 if (document.querySelectorAll('.item-row').length === 0) {
                     const tbody = document.querySelector('#itemsTable tbody');
-                    tbody.innerHTML = '<tr id="noItemsRow"><td colspan="5" class="text-center text-muted py-3">No items. Click "Add Missing Item" to add one.</td></tr>';
+                    tbody.innerHTML = '<tr id="noItemsRow"><td colspan="7" class="text-center text-muted py-3">No items. Click "Add Missing Item" to add one.</td></tr>';
                 }
             }
         });
         
+        // Tab shortcut to add new row
+        document.getElementById('itemsTable').addEventListener('keydown', function(e) {
+            // Check if Tab key was pressed (without Shift)
+            if (e.key === 'Tab' && !e.shiftKey) {
+                // If the focused element is the remove button (last focusable element in row)
+                const isRemoveBtn = e.target.closest('.remove-item-btn');
+                
+                if (isRemoveBtn) {
+                    const currentRow = e.target.closest('tr');
+                    const allRows = document.querySelectorAll('.item-row');
+                    const isLastRow = currentRow === allRows[allRows.length - 1];
+                    
+                    // If it's the last row, add a new row automatically
+                    if (isLastRow) {
+                        e.preventDefault(); // Prevent default tabbing behavior (which goes to cancel btn)
+                        document.getElementById('addItemBtn').click(); // Add new row
+                        
+                        // Focus the first input (item name) of the newly added row
+                        setTimeout(() => {
+                            const newRows = document.querySelectorAll('.item-row');
+                            const newlyAddedRow = newRows[newRows.length - 1];
+                            const firstInput = newlyAddedRow.querySelector('input[type="text"]');
+                            if (firstInput) firstInput.focus();
+                        }, 50);
+                    }
+                }
+            }
+        });
+
         // Initial calculation to ensure subtotals match if manually edited earlier
         updateSubtotalsAndTotal();
 

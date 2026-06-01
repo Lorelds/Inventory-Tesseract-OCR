@@ -12,10 +12,52 @@ class ProductsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::paginate(10);
-        return view('products.index', compact('products'));
+        $query = Product::query();
+
+        // Search logic
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter logic
+        if ($request->has('category') && !empty($request->category)) {
+            $query->where('category', $request->category);
+        }
+
+        // Sort logic
+        $sort = $request->get('sort', 'newest');
+        switch ($sort) {
+            case 'stock_high':
+                $query->orderBy('stock', 'desc');
+                break;
+            case 'stock_low':
+                $query->orderBy('stock', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('sell_price', 'desc');
+                break;
+            case 'price_low':
+                $query->orderBy('sell_price', 'asc');
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $products = $query->paginate(10)->withQueryString();
+        $categories = Product::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
+
+        return view('products.index', compact('products', 'categories'));
     }
 
     /**
@@ -33,7 +75,6 @@ class ProductsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku',
             'buy_price' => 'required|numeric|min:0',
             'sell_price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -45,7 +86,10 @@ class ProductsController extends Controller
                 ->withInput();
         }
 
-        Product::create($request->all());
+        $data = $request->all();
+        $data['sku'] = $this->generateSKU($data['name']);
+        
+        Product::create($data);
 
         return redirect()->route('products.index')
             ->with('success', 'Product created successfully.');
@@ -56,7 +100,30 @@ class ProductsController extends Controller
      */
     public function show(Product $product)
     {
-        return view('products.show', compact('product'));
+        $history = \App\Models\ReceiptItem::where('product_id', $product->id)
+            ->join('receipts', 'receipt_items.receipt_id', '=', 'receipts.id')
+            ->select('receipt_items.unit_price', 'receipts.transaction_date')
+            ->orderBy('receipts.transaction_date', 'asc')
+            ->get();
+
+        $price_history_dates = [];
+        $price_history_values = [];
+
+        foreach ($history as $record) {
+            $date = \Carbon\Carbon::parse($record->transaction_date)->format('d M Y');
+            // Prevent duplicate dates on the same day if multiple receipts were scanned, 
+            // or just plot all data points. We will plot all points.
+            $price_history_dates[] = $date;
+            $price_history_values[] = $record->unit_price;
+        }
+
+        // Add the current creation date/price as the first data point if history is empty or if we want the baseline
+        if (empty($price_history_dates)) {
+            $price_history_dates[] = $product->created_at->format('d M Y');
+            $price_history_values[] = $product->buy_price;
+        }
+
+        return view('products.show', compact('product', 'price_history_dates', 'price_history_values'));
     }
 
     /**
@@ -74,7 +141,7 @@ class ProductsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
+            'category' => 'nullable|string|max:255',
             'buy_price' => 'required|numeric|min:0',
             'sell_price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
@@ -101,5 +168,27 @@ class ProductsController extends Controller
 
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully.');
+    }
+
+    // Generate SKU from product name
+    private function generateSKU($name)
+    {
+        // Take first 3 letters of each word, uppercase
+        $words = preg_split('/[\s\-_]+/', $name);
+        $skuParts = array_map(function($word) {
+            return strtoupper(substr($word, 0, min(3, strlen($word))));
+        }, $words);
+
+        $sku = implode('', $skuParts);
+
+        // Ensure uniqueness by adding timestamp if needed
+        $baseSku = $sku;
+        $counter = 1;
+        while (Product::where('sku', $sku)->exists()) {
+            $sku = $baseSku . $counter;
+            $counter++;
+        }
+
+        return $sku;
     }
 }

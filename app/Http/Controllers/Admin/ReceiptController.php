@@ -17,9 +17,42 @@ use Intervention\Image\Facades\Image as InterventionImage;
 class ReceiptController extends Controller
 {
     // Show list of all receipts (History)
-    public function index()
+    public function index(Request $request)
     {
-        $receipts = Receipt::with('store')->orderBy('created_at', 'desc')->paginate(10);
+        $query = Receipt::with('store');
+
+        // Search logic
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhereHas('store', function($qStore) use ($search) {
+                      $qStore->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Sort logic
+        $sort = $request->get('sort', 'newest');
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'highest_amount':
+                $query->orderBy('total_amount', 'desc');
+                break;
+            case 'lowest_amount':
+                $query->orderBy('total_amount', 'asc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $receipts = $query->paginate(10)->withQueryString();
+        
         return view('admin.receipts.index', compact('receipts'));
     }
 
@@ -104,6 +137,7 @@ class ReceiptController extends Controller
     {
         $receipt = Receipt::with('store')->findOrFail($id);
         $stores = Store::all();
+        $categories = Product::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
         $parsedData = $this->parseReceiptText($receipt->raw_text);
 
         // If already validated, redirect to list or show message
@@ -112,7 +146,7 @@ class ReceiptController extends Controller
                 ->with('info', 'This receipt has already been validated.');
         }
 
-        return view('admin.receipts.validate', compact('receipt', 'stores', 'parsedData'));
+        return view('admin.receipts.validate', compact('receipt', 'stores', 'categories', 'parsedData'));
     }
 
     // Handle validation and save data
@@ -126,7 +160,9 @@ class ReceiptController extends Controller
             'total_amount' => 'required|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
+            'items.*.category' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.measure' => 'nullable|numeric|min:0.01',
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
@@ -155,6 +191,48 @@ class ReceiptController extends Controller
 
         return redirect()->route('admin.receipts.index')
             ->with('success', 'Receipt validated and processed successfully.');
+    }
+
+    public function destroy(\App\Models\Receipt $receipt)
+    {
+        // 1. Revert Inventory Stock
+        foreach ($receipt->items as $item) {
+            $product = \App\Models\Product::find($item->product_id);
+            if ($product) {
+                $product->stock -= $item->quantity;
+                // Ensure stock doesn't go below 0 just in case
+                if ($product->stock < 0) {
+                    $product->stock = 0;
+                }
+                $product->save();
+            }
+        }
+
+        // 2. Delete related Debt (if any)
+        $debt = \App\Models\Debt::where('store_id', $receipt->store_id)
+            ->where('amount', $receipt->total_amount)
+            ->where('notes', 'like', '%#' . $receipt->id . '%')
+            ->first();
+            
+        if ($debt) {
+            // Also delete its payments
+            \App\Models\DebtPayment::where('debt_id', $debt->id)->delete();
+            $debt->delete();
+        }
+
+        // 3. Delete Receipt Items (if DB cascade isn't set up)
+        \App\Models\ReceiptItem::where('receipt_id', $receipt->id)->delete();
+
+        // 4. Delete the receipt image file if exists
+        if ($receipt->image_path && \Illuminate\Support\Facades\Storage::exists($receipt->image_path)) {
+            \Illuminate\Support\Facades\Storage::delete($receipt->image_path);
+        }
+
+        // 5. Delete Receipt
+        $receipt->delete();
+
+        return redirect()->route('admin.receipts.index')
+            ->with('success', 'Receipt completely deleted. Inventory and debts reverted.');
     }
 
     // Preprocess image for better OCR results
@@ -272,6 +350,21 @@ class ReceiptController extends Controller
                     ];
                 }
             }
+            // Pattern 4 (Indonesian Nota / Hardware Store): [Qty] [Name] [Unit Price] [Total]
+            // e.g., "10 Pasir 0.25 x 6m 33.500 2.010.000"
+            elseif (preg_match('/^(\d+)\s+(.+?)\s+([\d.,]{4,})\s+([\d.,]{4,})$/i', trim($line), $matches)) {
+                $qty = (float) $matches[1];
+                $name = trim($matches[2]);
+                $price = (float) preg_replace('/[^0-9]/', '', $matches[3]);
+                
+                if (strtolower($name) !== 'item' && $qty > 0) {
+                    $itemLines[] = [
+                        'name' => $name,
+                        'quantity' => $qty,
+                        'unit_price' => $price,
+                    ];
+                }
+            }
         }
 
         if (!empty($itemLines)) {
@@ -293,17 +386,34 @@ class ReceiptController extends Controller
                     'buy_price' => $itemData['unit_price'],
                     'sell_price' => $itemData['unit_price'] * 1.5, // 50% markup as example
                     'stock' => 0,
+                    'category' => $itemData['category'] ?? null,
                 ]
             );
 
+            // Update category if provided and different
+            if (!empty($itemData['category']) && $product->category !== $itemData['category']) {
+                $product->update(['category' => $itemData['category']]);
+            }
+
+            // Update price if it has changed
+            if ($product->buy_price != $itemData['unit_price']) {
+                $product->update([
+                    'buy_price' => $itemData['unit_price'],
+                    'sell_price' => $itemData['unit_price'] * 1.5, // maintain 50% markup rule
+                ]);
+            }
+
+            $measure = isset($itemData['measure']) && $itemData['measure'] > 0 ? (float) $itemData['measure'] : 1;
+            
             // Create receipt item
             ReceiptItem::create([
                 'receipt_id' => $receipt->id,
                 'product_id' => $product->id,
                 'product_name' => $itemData['name'],
                 'quantity' => $itemData['quantity'],
+                'measure' => $measure,
                 'unit_price' => $itemData['unit_price'],
-                'subtotal' => $itemData['quantity'] * $itemData['unit_price'],
+                'subtotal' => $itemData['quantity'] * $itemData['unit_price'] * $measure,
             ]);
 
             // Update product stock (Reduce inventory because this is a sale to an external store)
