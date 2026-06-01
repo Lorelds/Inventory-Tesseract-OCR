@@ -25,22 +25,22 @@
             </div>
             <nav class="sidebar-menu">
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    <i class="ph ph-squares-four fs-5"></i> Dashboard
+                    <i class="ph ph-squares-four fs-5"></i> {{ __('Dashboard') }}
                 </a>
                 <a href="{{ route('admin.receipts.index') }}" class="{{ request()->routeIs('admin.receipts.*') ? 'active' : '' }}">
-                    <i class="ph ph-receipt fs-5"></i> Receipts
+                    <i class="ph ph-receipt fs-5"></i> {{ __('Receipts') }}
                 </a>
                 <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}">
-                    <i class="ph ph-package fs-5"></i> Products
+                    <i class="ph ph-package fs-5"></i> {{ __('Products') }}
                 </a>
                 <a href="{{ route('stores.index') }}" class="{{ request()->routeIs('stores.*') ? 'active' : '' }}">
-                    <i class="ph ph-storefront fs-5"></i> Stores
+                    <i class="ph ph-storefront fs-5"></i> {{ __('Stores') }}
                 </a>
                 <a href="{{ route('debts.index') }}" class="{{ request()->routeIs('debts.*') ? 'active' : '' }}">
-                    <i class="ph ph-money fs-5"></i> Active Debts
+                    <i class="ph ph-money fs-5"></i> {{ __('Active Debts') }}
                 </a>
                 <a href="{{ route('payments.index') }}" class="{{ request()->routeIs('payments.*') ? 'active' : '' }}">
-                    <i class="ph ph-wallet fs-5"></i> Payments
+                    <i class="ph ph-wallet fs-5"></i> {{ __('Payments History') }}
                 </a>
             </nav>
         </aside>
@@ -53,8 +53,20 @@
                     <h5 class="mb-0 text-muted fw-normal">@yield('page_title', 'Dashboard')</h5>
                 </div>
                 <div class="d-flex align-items-center gap-3">
+                    
+                    <!-- Language Switcher -->
+                    <div class="dropdown">
+                        <button class="btn btn-light bg-white border shadow-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 8px;">
+                            <i class="ph-bold ph-globe"></i>
+                            <span class="text-uppercase fw-semibold">{{ session('locale', 'en') }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 8px; min-width: 120px;">
+                            <li><a class="dropdown-item d-flex align-items-center gap-2 {{ session('locale', 'en') === 'en' ? 'active bg-primary' : '' }}" href="{{ route('lang.switch', 'en') }}">🇬🇧 English</a></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2 {{ session('locale') === 'id' ? 'active bg-primary' : '' }}" href="{{ route('lang.switch', 'id') }}">🇮🇩 Indonesia</a></li>
+                        </ul>
+                    </div>
 
-                    <div class="d-flex align-items-center gap-2 ms-3">
+                    <div class="d-flex align-items-center gap-2 ms-2">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}&background=0ea5e9&color=fff" alt="User" class="rounded-circle" width="36" height="36">
                         <span class="fw-medium">{{ auth()->user()->name ?? 'User' }}</span>
                         

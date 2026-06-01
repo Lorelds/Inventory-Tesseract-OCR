@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('page_title', 'Dashboard Overview')
+@section('page_title', __('Dashboard Overview'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="mb-1">Dashboard Overview</h2>
-        <p class="text-muted mb-0">Welcome back, {{ auth()->user()->name }}. Here's what's happening today.</p>
+        <h2 class="mb-1">{{ __('Dashboard Overview') }}</h2>
+        <p class="text-muted mb-0">{{ __('Welcome back') }}, {{ auth()->user()->name }}. {{ __("Here's what's happening today.") }}</p>
     </div>
 </div>
 
@@ -17,10 +17,10 @@
                     <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
                         <i class="ph-bold ph-currency-circle-dollar fs-4"></i>
                     </div>
-                    <h6 class="text-muted mb-0">Total Sales</h6>
+                    <h6 class="text-muted mb-0">{{ __('Total Sales') }}</h6>
                 </div>
                 <h3 class="mb-1">Rp {{ number_format($total_sales, 0, ',', '.') }}</h3>
-                <p class="text-success small mb-0"><i class="ph-bold ph-trend-up"></i> Paid Receipts Only</p>
+                <p class="text-success small mb-0"><i class="ph-bold ph-trend-up"></i> {{ __('Paid Receipts Only') }}</p>
             </div>
         </div>
     </div>
@@ -32,10 +32,10 @@
                     <div class="bg-danger bg-opacity-10 text-danger rounded p-2 me-3">
                         <i class="ph-bold ph-hand-coins fs-4"></i>
                     </div>
-                    <h6 class="text-muted mb-0">Total Debt</h6>
+                    <h6 class="text-muted mb-0">{{ __('Total Debt') }}</h6>
                 </div>
                 <h3 class="mb-1">Rp {{ number_format($total_debt, 0, ',', '.') }}</h3>
-                <p class="text-danger small mb-0"><i class="ph-bold ph-warning"></i> Unpaid Hutang</p>
+                <p class="text-danger small mb-0"><i class="ph-bold ph-warning"></i> {{ __('Unpaid Hutang') }}</p>
             </div>
         </div>
     </div>
@@ -47,10 +47,10 @@
                     <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3">
                         <i class="ph-bold ph-package fs-4"></i>
                     </div>
-                    <h6 class="text-muted mb-0">Total Products</h6>
+                    <h6 class="text-muted mb-0">{{ __('Total Products') }}</h6>
                 </div>
                 <h3 class="mb-1">{{ number_format($total_products, 0, ',', '.') }}</h3>
-                <p class="text-muted small mb-0">Unique Items in Inventory</p>
+                <p class="text-muted small mb-0">{{ __('Unique Items in Inventory') }}</p>
             </div>
         </div>
     </div>
@@ -62,10 +62,10 @@
                     <div class="bg-info bg-opacity-10 text-info rounded p-2 me-3">
                         <i class="ph-bold ph-receipt fs-4"></i>
                     </div>
-                    <h6 class="text-muted mb-0">Total Receipts</h6>
+                    <h6 class="text-muted mb-0">{{ __('Total Receipts') }}</h6>
                 </div>
                 <h3 class="mb-1">{{ number_format($total_receipts, 0, ',', '.') }}</h3>
-                <p class="text-muted small mb-0">Validated Receipts</p>
+                <p class="text-muted small mb-0">{{ __('Validated Receipts') }}</p>
             </div>
         </div>
     </div>
