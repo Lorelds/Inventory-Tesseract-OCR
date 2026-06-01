@@ -3,13 +3,20 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <div class="d-flex align-items-center gap-2 mb-1">
-            <a href="{{ route('debts.index') }}" class="text-muted text-decoration-none"><i class="ph-bold ph-arrow-left"></i> Back</a>
-            <span class="text-muted">/</span>
-            <h2 class="mb-0">{{ $store->name }}</h2>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('debts.index') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1">{{ $store->name }}</h2>
+            <p class="text-muted mb-0">
+                @if(($type ?? 'receivable') === 'payable')
+                    Hutang Kita ke Toko - Tagihan Belum Lunas
+                @else
+                    Piutang Pelanggan - Tagihan Belum Lunas
+                @endif
+            </p>
         </div>
-        <p class="text-muted mb-0">Manage all unpaid invoices and payment history for this vendor.</p>
     </div>
 </div>
 
@@ -36,7 +43,11 @@
                                     $remaining = $debt->amount - $debt->paid_amount;
                                 @endphp
                                 <tr>
-                                    <td class="ps-4 fw-medium text-primary">#{{ $debt->receipt_id }}</td>
+                                    <td class="ps-4">
+                                        <a href="{{ route('admin.receipts.show', $debt->receipt_id) }}" class="fw-medium text-primary text-decoration-none">
+                                            #{{ $debt->receipt_id }}
+                                        </a>
+                                    </td>
                                     <td>{{ $debt->created_at->format('d M Y') }}</td>
                                     <td>Rp {{ number_format($debt->amount, 0, ',', '.') }}</td>
                                     <td class="text-success">Rp {{ number_format($debt->paid_amount, 0, ',', '.') }}</td>
@@ -161,7 +172,11 @@
                             @forelse($allPayments as $payment)
                                 <tr>
                                     <td class="ps-4">{{ $payment->payment_date->format('d M Y') }}</td>
-                                    <td><span class="text-muted">#{{ $payment->receipt_id }}</span></td>
+                                    <td>
+                                        <a href="{{ route('admin.receipts.show', $payment->receipt_id) }}" class="text-decoration-none">
+                                            <span class="text-muted">#{{ $payment->receipt_id }}</span>
+                                        </a>
+                                    </td>
                                     <td class="fw-bold text-success">Rp {{ number_format($payment->amount_paid, 0, ',', '.') }}</td>
                                     <td>
                                         <span class="badge bg-light text-dark border"><i class="ph-fill ph-wallet"></i> {{ $payment->payment_method ?? 'Unknown' }}</span>

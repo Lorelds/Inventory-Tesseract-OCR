@@ -3,9 +3,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Review OCR Results</h2>
-        <p class="text-muted mb-0">Please verify and correct the extracted data before saving to inventory.</p>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('admin.receipts.index') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1">Review OCR Results</h2>
+            <p class="text-muted mb-0">Please verify and correct the extracted data before saving to inventory.</p>
+        </div>
     </div>
 </div>
 
@@ -75,6 +80,20 @@
                             </button>
                         </div>
                     </div>
+                    @if($receipt->payment_status === 'lunas')
+                    <div class="row border-top pt-3 mt-1">
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_method" class="form-label fw-medium text-success"><i class="ph-fill ph-check-circle me-1"></i> Payment Method <span class="text-danger">*</span></label>
+                            <select class="form-select border-success" id="payment_method" name="payment_method" required>
+                                <option value="Cash">Cash</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="E-Wallet">E-Wallet</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="form-text">How was this receipt paid?</div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
             
@@ -114,13 +133,13 @@
                                             <input type="text" class="form-control" name="items[{{ $index }}][category]" value="{{ old('items.'.$index.'.category') }}" list="categoryList" placeholder="e.g. Paku">
                                         </td>
                                         <td>
-                                            <input type="number" step="1" min="1" class="form-control qty-input" name="items[{{ $index }}][quantity]" value="{{ old('items.'.$index.'.quantity', $item['quantity'] ?? 1) }}" required>
+                                            <input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[{{ $index }}][quantity]" value="{{ old('items.'.$index.'.quantity', $item['quantity'] ?? 1) }}" style="min-width: 70px;" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0.01" class="form-control measure-input" name="items[{{ $index }}][measure]" value="{{ old('items.'.$index.'.measure', $item['measure'] ?? 1) }}">
+                                            <input type="number" step="0.01" min="0.01" class="form-control measure-input px-2" name="items[{{ $index }}][measure]" value="{{ old('items.'.$index.'.measure', $item['measure'] ?? 1) }}" style="min-width: 70px;">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control price-input" name="items[{{ $index }}][unit_price]" value="{{ old('items.'.$index.'.unit_price', $item['unit_price'] ?? 0) }}" required>
+                                            <input type="number" step="0.01" class="form-control price-input px-2" name="items[{{ $index }}][unit_price]" value="{{ old('items.'.$index.'.unit_price', $item['unit_price'] ?? 0) }}" style="min-width: 100px;" required>
                                         </td>
                                         <td>
                                             <input type="number" class="form-control subtotal-input bg-light" value="{{ (float)($item['quantity'] ?? 1) * (float)($item['measure'] ?? 1) * (float)($item['unit_price'] ?? 0) }}" readonly tabindex="-1">
@@ -161,9 +180,9 @@
     <tr class="item-row">
         <td><input type="text" class="form-control" name="items[__INDEX__][name]" required></td>
         <td><input type="text" class="form-control" name="items[__INDEX__][category]" list="categoryList" placeholder="e.g. Paku"></td>
-        <td><input type="number" step="1" min="1" class="form-control qty-input" name="items[__INDEX__][quantity]" value="1" required></td>
-        <td><input type="number" step="0.01" min="0.01" class="form-control measure-input" name="items[__INDEX__][measure]" value="1"></td>
-        <td><input type="number" step="0.01" class="form-control price-input" name="items[__INDEX__][unit_price]" value="0" required></td>
+        <td><input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[__INDEX__][quantity]" value="1" style="min-width: 70px;" required></td>
+        <td><input type="number" step="0.01" min="0.01" class="form-control measure-input px-2" name="items[__INDEX__][measure]" value="1" style="min-width: 70px;"></td>
+        <td><input type="number" step="0.01" class="form-control price-input px-2" name="items[__INDEX__][unit_price]" value="0" style="min-width: 100px;" required></td>
         <td><input type="number" class="form-control subtotal-input bg-light" value="0" readonly tabindex="-1"></td>
         <td class="text-center">
             <button type="button" class="btn btn-sm btn-light text-danger remove-item-btn"><i class="ph-bold ph-trash"></i></button>

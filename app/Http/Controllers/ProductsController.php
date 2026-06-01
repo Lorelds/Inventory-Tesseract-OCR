@@ -123,7 +123,9 @@ class ProductsController extends Controller
             $price_history_values[] = $product->buy_price;
         }
 
-        return view('products.show', compact('product', 'price_history_dates', 'price_history_values'));
+        $stock_movements = $product->stockMovements()->with('receipt.store')->orderBy('created_at', 'desc')->get();
+
+        return view('products.show', compact('product', 'price_history_dates', 'price_history_values', 'stock_movements'));
     }
 
     /**
@@ -190,5 +192,43 @@ class ProductsController extends Controller
         }
 
         return $sku;
+    }
+
+    public function adjustStock(\Illuminate\Http\Request $request, Product $product)
+    {
+        $validator = Validator::make($request->all(), [
+            'type' => 'required|in:in,out',
+            'quantity' => 'required|numeric|min:0.01',
+            'notes' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator, 'stock_adjust')
+                ->withInput();
+        }
+
+        if ($request->type == 'in') {
+            $product->increment('stock', $request->quantity);
+        } else {
+            // Optional: prevent negative stock
+            // if ($product->stock < $request->quantity) {
+            //     return redirect()->back()->with('error', 'Not enough stock to deduct.');
+            // }
+            $product->decrement('stock', $request->quantity);
+        }
+
+        $newBalance = $product->fresh()->stock;
+
+        \App\Models\StockMovement::create([
+            'product_id' => $product->id,
+            'type' => $request->type,
+            'quantity' => $request->quantity,
+            'balance' => $newBalance,
+            'notes' => 'Manual: ' . $request->notes,
+        ]);
+
+        return redirect()->route('products.show', $product->id)
+            ->with('success', 'Stock adjusted successfully.');
     }
 }

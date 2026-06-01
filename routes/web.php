@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Products Routes
+    Route::post('products/{product}/adjust-stock', [ProductsController::class, 'adjustStock'])->name('products.adjust_stock');
     Route::resource('products', ProductsController::class)->except(['edit', 'update', 'destroy']);
     Route::resource('products', ProductsController::class)->only(['edit', 'update', 'destroy'])->middleware('super_admin');
 
@@ -44,6 +45,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [DebtController::class, 'index'])->name('index');
         Route::get('/store/{store}', [DebtController::class, 'showStore'])->name('showStore');
         Route::post('/{debt}/pay', [DebtController::class, 'pay'])->name('pay');
+    });
+
+    // Payments Routes
+    Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PaymentController::class, 'index'])->name('index');
+        Route::get('/store/{store}', [\App\Http\Controllers\PaymentController::class, 'showStore'])->name('showStore');
     });
 
     // Breeze Profile

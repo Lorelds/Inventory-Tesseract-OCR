@@ -37,7 +37,10 @@
                     <i class="ph ph-storefront fs-5"></i> Stores
                 </a>
                 <a href="{{ route('debts.index') }}" class="{{ request()->routeIs('debts.*') ? 'active' : '' }}">
-                    <i class="ph ph-money fs-5"></i> Debts & Payments
+                    <i class="ph ph-money fs-5"></i> Active Debts
+                </a>
+                <a href="{{ route('payments.index') }}" class="{{ request()->routeIs('payments.*') ? 'active' : '' }}">
+                    <i class="ph ph-wallet fs-5"></i> Payments
                 </a>
             </nav>
         </aside>
@@ -50,10 +53,7 @@
                     <h5 class="mb-0 text-muted fw-normal">@yield('page_title', 'Dashboard')</h5>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <div class="position-relative">
-                        <i class="ph ph-bell fs-4 text-muted"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-                    </div>
+
                     <div class="d-flex align-items-center gap-2 ms-3">
                         <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}&background=0ea5e9&color=fff" alt="User" class="rounded-circle" width="36" height="36">
                         <span class="fw-medium">{{ auth()->user()->name ?? 'User' }}</span>

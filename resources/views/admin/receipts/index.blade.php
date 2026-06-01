@@ -3,9 +3,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Receipt History</h2>
-        <p class="text-muted mb-0">View all scanned receipts and their current status.</p>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('dashboard') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1">Receipt History</h2>
+            <p class="text-muted mb-0">View all scanned receipts and their current status.</p>
+        </div>
     </div>
     <div>
         <a href="{{ route('admin.receipts.upload.form') }}" class="btn btn-primary px-4 fw-medium">
@@ -14,9 +19,26 @@
     </div>
 </div>
 
+<div class="d-flex gap-2 mb-4">
+    <a href="{{ route('admin.receipts.index', array_merge(request()->query(), ['type' => ''])) }}" class="btn {{ request('type') == '' ? 'btn-dark' : 'btn-outline-dark bg-white' }} px-4 rounded-pill fw-medium shadow-sm">
+        All Receipts
+    </a>
+    <a href="{{ route('admin.receipts.index', array_merge(request()->query(), ['type' => 'pembelian'])) }}" class="btn {{ request('type') == 'pembelian' ? 'btn-primary' : 'btn-outline-primary bg-white' }} px-4 rounded-pill fw-medium shadow-sm">
+        <i class="ph-bold ph-download-simple me-1"></i> Pembelian (Buy)
+    </a>
+    <a href="{{ route('admin.receipts.index', array_merge(request()->query(), ['type' => 'penjualan'])) }}" class="btn {{ request('type') == 'penjualan' ? 'btn-success' : 'btn-outline-success bg-white' }} px-4 rounded-pill fw-medium shadow-sm">
+        <i class="ph-bold ph-upload-simple me-1"></i> Penjualan (Sell)
+    </a>
+</div>
+
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form action="{{ route('admin.receipts.index') }}" method="GET" class="row g-3 align-items-end">
+            <!-- Hidden input to preserve type filter when searching -->
+            @if(request('type'))
+                <input type="hidden" name="type" value="{{ request('type') }}">
+            @endif
+            
             <div class="col-md-6">
                 <label class="form-label text-muted small mb-1">Search Receipts</label>
                 <div class="input-group">
@@ -49,6 +71,7 @@
                         <th class="ps-4">Receipt ID</th>
                         <th>Date</th>
                         <th>Store / Vendor</th>
+                        <th>Type</th>
                         <th>Total Amount</th>
                         <th>Payment Status</th>
                         <th>Validation Status</th>
@@ -65,6 +88,13 @@
                                     {{ $receipt->store->name }}
                                 @else
                                     {{ $receipt->store_name ?? 'Unknown' }}
+                                @endif
+                            </td>
+                            <td>
+                                @if($receipt->type == 'pembelian')
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"><i class="ph-bold ph-download-simple me-1"></i> Pembelian</span>
+                                @else
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="ph-bold ph-upload-simple me-1"></i> Penjualan</span>
                                 @endif
                             </td>
                             <td class="fw-medium">Rp {{ number_format($receipt->total_amount, 0, ',', '.') }}</td>

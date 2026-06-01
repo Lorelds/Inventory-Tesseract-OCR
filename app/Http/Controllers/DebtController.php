@@ -10,23 +10,51 @@ use Illuminate\Support\Facades\DB;
 
 class DebtController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Group debts by store. We get stores that have debts, and calculate totals.
-        $storesWithDebts = Store::whereHas('debts')->with(['debts' => function($query) {
-            $query->orderBy('created_at', 'desc');
-        }])->get();
+        $search = $request->input('search');
+        $type = $request->input('type', 'receivable'); // default to receivable (Piutang Pelanggan)
+        $receiptType = $type === 'payable' ? 'pembelian' : 'penjualan';
 
-        return view('debts.index', compact('storesWithDebts'));
+        // Group debts by store. We get stores that have active debts of the requested type.
+        $query = Store::whereHas('debts', function($q) use ($receiptType) {
+            $q->whereIn('status', ['hutang', 'partial'])
+              ->whereHas('receipt', function($q2) use ($receiptType) {
+                  $q2->where('type', $receiptType);
+              });
+        });
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $storesWithDebts = $query->with(['debts' => function($query) use ($receiptType) {
+            $query->whereIn('status', ['hutang', 'partial'])
+                  ->whereHas('receipt', function($q) use ($receiptType) {
+                      $q->where('type', $receiptType);
+                  })
+                  ->orderBy('created_at', 'desc');
+        }])->paginate(10)->withQueryString();
+
+        return view('debts.index', compact('storesWithDebts', 'search', 'type'));
     }
 
-    public function showStore($storeId)
+    public function showStore(Request $request, $storeId)
     {
-        $store = Store::with(['debts.receipt', 'debts.payments' => function($query) {
+        $type = $request->input('type', 'receivable');
+        $receiptType = $type === 'payable' ? 'pembelian' : 'penjualan';
+
+        $store = Store::with(['debts' => function($query) use ($receiptType) {
+            $query->whereIn('status', ['hutang', 'partial'])
+                  ->whereHas('receipt', function($q) use ($receiptType) {
+                      $q->where('type', $receiptType);
+                  })
+                  ->orderBy('created_at', 'desc');
+        }, 'debts.receipt', 'debts.payments' => function($query) {
             $query->orderBy('payment_date', 'desc');
         }])->findOrFail($storeId);
 
-        return view('debts.show', compact('store'));
+        return view('debts.show', compact('store', 'type'));
     }
 
     public function pay(Request $request, $debtId)

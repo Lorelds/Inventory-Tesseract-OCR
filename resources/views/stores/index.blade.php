@@ -3,9 +3,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Stores & Vendors</h2>
-        <p class="text-muted mb-0">Manage all your supplier and vendor details.</p>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('dashboard') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1">Stores & Vendors</h2>
+            <p class="text-muted mb-0">Manage all your supplier and vendor details.</p>
+        </div>
     </div>
     <div>
         <a href="{{ route('stores.create') }}" class="btn btn-primary">
@@ -109,8 +114,8 @@
         </div>
         
         @if($stores->hasPages())
-        <div class="card-footer bg-white border-top p-3 d-flex justify-content-end">
-            {{ $stores->links('pagination::bootstrap-5') }}
+        <div class="card-footer bg-white border-top p-3">
+            {{ $stores->links() }}
         </div>
         @endif
     </div>

@@ -3,10 +3,35 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Debt Management</h2>
-        <p class="text-muted mb-0">Overview of all outstanding and paid debts grouped by vendor.</p>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('dashboard') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1">Active Debts</h2>
+            <p class="text-muted mb-0">Overview of all outstanding debts grouped by vendor.</p>
+        </div>
     </div>
+    <form action="{{ route('debts.index') }}" method="GET" class="d-flex">
+        <input type="hidden" name="type" value="{{ $type ?? 'receivable' }}">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="ph-bold ph-magnifying-glass text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 ps-0" name="search" value="{{ $search ?? '' }}" placeholder="Cari nama toko/pelanggan..." style="min-width: 250px;">
+            <button class="btn btn-primary" type="submit">Cari</button>
+        </div>
+    </form>
+</div>
+
+<!-- Simple Toggle -->
+<div class="d-flex gap-2 mb-4">
+    <a href="{{ route('debts.index', ['type' => 'receivable']) }}" class="btn d-flex align-items-center gap-2 px-4 py-2 {{ ($type ?? 'receivable') === 'receivable' ? 'btn-primary shadow-sm' : 'btn-light border text-muted' }}" style="border-radius: 8px;">
+        <i class="ph-fill ph-hand-coins fs-5"></i>
+        <span class="fw-semibold">Piutang Pelanggan</span>
+    </a>
+    <a href="{{ route('debts.index', ['type' => 'payable']) }}" class="btn d-flex align-items-center gap-2 px-4 py-2 {{ ($type ?? 'receivable') === 'payable' ? 'btn-danger shadow-sm' : 'btn-light border text-muted' }}" style="border-radius: 8px;">
+        <i class="ph-fill ph-storefront fs-5"></i>
+        <span class="fw-semibold">Hutang Toko</span>
+    </a>
 </div>
 
 <div class="row">
@@ -76,4 +101,11 @@
         </div>
     @endforelse
 </div>
+@if($storesWithDebts->hasPages())
+<div class="card mt-4 border-0 shadow-sm">
+    <div class="card-body">
+        {{ $storesWithDebts->links() }}
+    </div>
+</div>
+@endif
 @endsection

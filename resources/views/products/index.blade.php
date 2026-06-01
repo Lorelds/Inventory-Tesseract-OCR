@@ -3,9 +3,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Products Inventory</h2>
-        <p class="text-muted mb-0">Manage all items, pricing, and stock levels.</p>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('dashboard') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1">Products Inventory</h2>
+            <p class="text-muted mb-0">Manage all items, pricing, and stock levels.</p>
+        </div>
     </div>
     <div>
         <a href="{{ route('products.create') }}" class="btn btn-primary">
@@ -135,8 +140,8 @@
         </div>
         
         @if(method_exists($products, 'hasPages') && $products->hasPages())
-        <div class="card-footer bg-white border-top p-3 d-flex justify-content-end">
-            {{ $products->links('pagination::bootstrap-5') }}
+        <div class="card-footer bg-white border-top p-3">
+            {{ $products->links() }}
         </div>
         @endif
     </div>

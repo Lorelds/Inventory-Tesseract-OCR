@@ -3,13 +3,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <div class="d-flex align-items-center gap-2 mb-1">
-            <a href="{{ route('stores.index') }}" class="text-muted text-decoration-none"><i class="ph-bold ph-arrow-left"></i> Back to Stores</a>
-            <span class="text-muted">/</span>
-            <h2 class="mb-0">{{ $store->name }}</h2>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('stores.index') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1">{{ $store->name }}</h2>
+            <p class="text-muted mb-0">Detailed information about this vendor and their transactions.</p>
         </div>
-        <p class="text-muted mb-0">Detailed information about this vendor and their transactions.</p>
     </div>
     <div>
         <a href="{{ route('debts.showStore', $store->id) }}" class="btn btn-outline-primary px-4 fw-medium">

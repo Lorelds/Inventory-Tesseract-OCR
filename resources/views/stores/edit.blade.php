@@ -3,14 +3,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Edit Store details</h2>
-        <p class="text-muted mb-0">Update information for {{ $store->name }}.</p>
-    </div>
-    <div>
-        <a href="{{ route('stores.index') }}" class="btn btn-light border">
-            <i class="ph-bold ph-arrow-left"></i> Back to List
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('stores.index') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
         </a>
+        <div>
+            <h2 class="mb-1">Edit Store details</h2>
+            <p class="text-muted mb-0">Update information for {{ $store->name }}.</p>
+        </div>
     </div>
 </div>
 

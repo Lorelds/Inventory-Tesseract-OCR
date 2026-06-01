@@ -12,9 +12,16 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Total Sales (Paid Receipts)
+        // Total Sales (Paid Receipts) - ONLY Penjualan
         $total_sales = Receipt::where('status', 'validated')
             ->where('payment_status', 'lunas')
+            ->where('type', 'penjualan')
+            ->sum('total_amount');
+
+        // Total Purchases (Paid)
+        $total_purchases = Receipt::where('status', 'validated')
+            ->where('payment_status', 'lunas')
+            ->where('type', 'pembelian')
             ->sum('total_amount');
 
         // Total Debt (Unpaid)
@@ -37,6 +44,7 @@ class DashboardController extends Controller
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $sales = Receipt::where('status', 'validated')
+                ->where('type', 'penjualan')
                 ->whereYear('transaction_date', $month->year)
                 ->whereMonth('transaction_date', $month->month)
                 ->sum('total_amount');
@@ -49,6 +57,7 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'total_sales', 
+            'total_purchases',
             'total_debt', 
             'total_products', 
             'total_receipts', 

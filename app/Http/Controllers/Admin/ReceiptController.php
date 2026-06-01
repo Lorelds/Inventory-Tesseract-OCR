@@ -33,6 +33,10 @@ class ReceiptController extends Controller
             });
         }
 
+        if ($request->has('type') && $request->type != '') {
+            $query->where('type', $request->type);
+        }
+
         // Sort logic
         $sort = $request->get('sort', 'newest');
         switch ($sort) {
@@ -77,6 +81,7 @@ class ReceiptController extends Controller
         $validator = Validator::make($request->all(), [
             'receipt_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'store_id' => 'required|exists:stores,id',
+            'type' => 'required|in:pembelian,penjualan',
         ]);
 
         if ($validator->fails()) {
@@ -121,6 +126,7 @@ class ReceiptController extends Controller
             'transaction_date' => $parsedData['transaction_date'] ?? null,
             'total_amount' => $parsedData['total_amount'] ?? 0.00,
             'status' => 'pending',
+            'type' => $request->type,
             'payment_status' => $request->payment_status ?? 'hutang',
         ]);
 
@@ -184,9 +190,11 @@ class ReceiptController extends Controller
         // Process receipt items and update inventory
         $this->processReceiptItems($receipt, $request->items);
 
-        // Create debt if payment status is hutang
+        // Create debt record. If lunas, it goes directly to payments history.
         if ($receipt->payment_status === 'hutang') {
-            $this->createDebtFromReceipt($receipt);
+            $this->createDebtFromReceipt($receipt, false);
+        } elseif ($receipt->payment_status === 'lunas') {
+            $this->createDebtFromReceipt($receipt, true, $request->payment_method);
         }
 
         return redirect()->route('admin.receipts.index')
@@ -416,22 +424,59 @@ class ReceiptController extends Controller
                 'subtotal' => $itemData['quantity'] * $itemData['unit_price'] * $measure,
             ]);
 
-            // Update product stock (Reduce inventory because this is a sale to an external store)
-            $product->decrement('stock', $itemData['quantity']);
+            // Update product stock and log movement based on receipt type
+            if ($receipt->type == 'pembelian') {
+                $product->increment('stock', $itemData['quantity']);
+                $newBalance = $product->fresh()->stock;
+                
+                \App\Models\StockMovement::create([
+                    'product_id' => $product->id,
+                    'receipt_id' => $receipt->id,
+                    'type' => 'in',
+                    'quantity' => $itemData['quantity'],
+                    'balance' => $newBalance,
+                    'notes' => 'Restock from Purchase Receipt #' . str_pad($receipt->id, 5, '0', STR_PAD_LEFT),
+                ]);
+            } else {
+                $product->decrement('stock', $itemData['quantity']);
+                $newBalance = $product->fresh()->stock;
+                
+                \App\Models\StockMovement::create([
+                    'product_id' => $product->id,
+                    'receipt_id' => $receipt->id,
+                    'type' => 'out',
+                    'quantity' => $itemData['quantity'],
+                    'balance' => $newBalance,
+                    'notes' => 'Sale to external store via Receipt #' . str_pad($receipt->id, 5, '0', STR_PAD_LEFT),
+                ]);
+            }
         }
     }
 
     // Create debt record from validated receipt
-    private function createDebtFromReceipt($receipt)
+    private function createDebtFromReceipt($receipt, $isPaidInFull = false, $paymentMethod = 'Cash')
     {
-        Debt::create([
+        $status = $isPaidInFull ? 'lunas' : 'hutang';
+        $paidAmount = $isPaidInFull ? $receipt->total_amount : 0;
+
+        $debt = Debt::create([
             'receipt_id' => $receipt->id,
             'store_id' => $receipt->store_id,
             'amount' => $receipt->total_amount,
-            'paid_amount' => 0,
-            'status' => 'hutang',
+            'paid_amount' => $paidAmount,
+            'status' => $status,
             'notes' => 'Created from receipt #' . $receipt->id,
         ]);
+
+        if ($isPaidInFull && $receipt->total_amount > 0) {
+            \App\Models\DebtPayment::create([
+                'debt_id' => $debt->id,
+                'amount_paid' => $receipt->total_amount,
+                'payment_date' => $receipt->transaction_date ?? now(),
+                'payment_method' => $paymentMethod ?? 'Cash',
+                'notes' => 'Paid in full on receipt validation',
+            ]);
+        }
     }
 
     // Generate SKU from product name

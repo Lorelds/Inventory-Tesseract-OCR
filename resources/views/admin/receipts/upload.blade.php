@@ -3,14 +3,14 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-1">Scan Receipt</h2>
-        <p class="text-muted mb-0">Upload a receipt image to extract inventory and pricing data automatically.</p>
-    </div>
-    <div>
-        <a href="{{ route('admin.receipts.index') }}" class="btn btn-light border">
-            <i class="ph-bold ph-list"></i> View All Receipts
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ route('admin.receipts.index') }}" class="btn btn-light border shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%;">
+            <i class="ph-bold ph-arrow-left"></i>
         </a>
+        <div>
+            <h2 class="mb-1">Scan Receipt</h2>
+            <p class="text-muted mb-0">Upload a receipt image to extract inventory and pricing data automatically.</p>
+        </div>
     </div>
 </div>
 
@@ -22,14 +22,37 @@
                     @csrf
                     
                     <div class="row mb-4">
-                        <div class="col-md-6 mb-4 mb-md-0">
-                            <label for="store_id" class="form-label fw-medium">Select Store/Vendor <span class="text-danger">*</span></label>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-medium d-block">Tipe Nota (Receipt Type) <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check form-check-inline p-3 border rounded w-100 me-0 bg-light bg-opacity-50">
+                                    <input class="form-check-input ms-1" type="radio" name="type" id="type_pembelian" value="pembelian" required>
+                                    <label class="form-check-label fw-medium ms-2" for="type_pembelian">
+                                        <i class="ph-bold ph-download-simple text-primary"></i> Nota Pembelian (Barang Masuk)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline p-3 border rounded w-100 me-0 bg-light bg-opacity-50">
+                                    <input class="form-check-input ms-1" type="radio" name="type" id="type_penjualan" value="penjualan" required checked>
+                                    <label class="form-check-label fw-medium ms-2" for="type_penjualan">
+                                        <i class="ph-bold ph-upload-simple text-success"></i> Nota Penjualan (Barang Keluar)
+                                    </label>
+                                </div>
+                            </div>
+                            @error('type')
+                                <div class="text-danger mt-1 small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="store_id" class="form-label fw-medium">Store / Vendor <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="ph ph-storefront"></i></span>
                                 <select class="form-select @error('store_id') is-invalid @enderror" id="store_id" name="store_id" required>
-                                    <option value="" disabled selected>-- Select Vendor --</option>
+                                    <option value="" selected disabled>-- Select Store/Vendor --</option>
                                     @foreach($stores as $store)
-                                        <option value="{{ $store->id }}">{{ $store->name }}</option>
+                                        <option value="{{ $store->id }}" {{ old('store_id') == $store->id ? 'selected' : '' }}>
+                                            {{ $store->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
