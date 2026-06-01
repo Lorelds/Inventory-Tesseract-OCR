@@ -256,6 +256,21 @@ class ReceiptController extends Controller
                         'unit_price' => $price,
                     ];
                 }
+            } 
+            // Pattern 3 (Swiss/Euro robust): [Qty]x[Name] [@] [Price] [Currency] [Total]
+            // e.g., "2xLatteMacehiato84.50CHF 9.00" or "IxGloki a5.00CHF5.00"
+            elseif (preg_match('/^([0-9Il]+)[xX×]\s*(.*?)(?:\s+|8|a|à|@)+(\d+[,.]\d{2})(?:\s*[A-Za-z$€£]*\s*)?(\d+[,.]\d{2})?$/ui', $line, $matches)) {
+                $qty = (float) str_replace(['I', 'l'], '1', $matches[1]);
+                $name = trim($matches[2]);
+                $price = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', $matches[3]));
+                
+                if (strtolower($name) !== 'item' && $qty > 0) {
+                    $itemLines[] = [
+                        'name' => $name,
+                        'quantity' => $qty,
+                        'unit_price' => $price,
+                    ];
+                }
             }
         }
 

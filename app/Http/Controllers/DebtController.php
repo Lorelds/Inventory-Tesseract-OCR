@@ -44,11 +44,12 @@ class DebtController extends Controller
 
             $debt = Debt::findOrFail($debtId);
             
-            // Calculate remaining balance
-            $remainingBalance = $debt->amount - $debt->paid_amount;
+            // Calculate remaining balance (round to 2 decimals for floating point safety)
+            $remainingBalance = round($debt->amount - $debt->paid_amount, 2);
+            $amountPaid = round($request->amount_paid, 2);
             
             // Don't allow overpayment
-            if ($request->amount_paid > $remainingBalance) {
+            if ($amountPaid > $remainingBalance) {
                 return redirect()->back()
                     ->withErrors(['amount_paid' => 'Payment amount cannot exceed the remaining balance of Rp ' . number_format($remainingBalance, 2, ',', '.')])
                     ->withInput();
@@ -57,7 +58,7 @@ class DebtController extends Controller
             // Create Payment Record
             DebtPayment::create([
                 'debt_id' => $debt->id,
-                'amount_paid' => $request->amount_paid,
+                'amount_paid' => $amountPaid,
                 'payment_date' => $request->payment_date,
                 'payment_method' => $request->payment_method,
                 'reference_number' => $request->reference_number,
@@ -65,9 +66,9 @@ class DebtController extends Controller
             ]);
 
             // Update Debt Balance and Status
-            $debt->paid_amount += $request->amount_paid;
+            $debt->paid_amount += $amountPaid;
             
-            if ($debt->paid_amount >= $debt->amount) {
+            if (round($debt->paid_amount, 2) >= round($debt->amount, 2)) {
                 $debt->status = 'lunas';
             } else {
                 $debt->status = 'partial';

@@ -12,6 +12,20 @@
 <form action="{{ route('admin.receipts.validateSubmit', $receipt->id) }}" method="POST">
     @csrf
     
+    @if ($errors->any())
+        <div class="alert alert-danger mb-4 border-0 shadow-sm">
+            <div class="d-flex align-items-center mb-2">
+                <i class="ph-fill ph-warning-circle fs-4 me-2"></i>
+                <h6 class="mb-0 fw-bold">Please fix the following errors:</h6>
+            </div>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="row">
         <!-- Image Preview Column -->
         <div class="col-lg-5 mb-4 mb-lg-0">
@@ -95,7 +109,7 @@
                                             <input type="text" class="form-control" name="items[{{ $index }}][name]" value="{{ $item['name'] }}" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control qty-input" name="items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}" required>
+                                            <input type="number" step="1" min="1" class="form-control qty-input" name="items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}" required>
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" class="form-control price-input" name="items[{{ $index }}][unit_price]" value="{{ $item['unit_price'] }}" required>
@@ -138,7 +152,7 @@
 <template id="itemRowTemplate">
     <tr class="item-row">
         <td><input type="text" class="form-control" name="items[__INDEX__][name]" required></td>
-        <td><input type="number" step="0.01" class="form-control qty-input" name="items[__INDEX__][quantity]" value="1" required></td>
+        <td><input type="number" step="1" min="1" class="form-control qty-input" name="items[__INDEX__][quantity]" value="1" required></td>
         <td><input type="number" step="0.01" class="form-control price-input" name="items[__INDEX__][unit_price]" value="0" required></td>
         <td><input type="number" class="form-control subtotal-input bg-light" value="0" readonly tabindex="-1"></td>
         <td class="text-center">
