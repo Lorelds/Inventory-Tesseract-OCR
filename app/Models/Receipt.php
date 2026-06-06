@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\Tenantable;
+
 class Receipt extends Model
 {
+    use Tenantable;
+
     protected $fillable = [
         'store_id',
         'image_path',

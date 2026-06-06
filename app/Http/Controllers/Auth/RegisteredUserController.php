@@ -32,15 +32,24 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, &$user) {
+            $company = \App\Models\Company::create([
+                'name' => $request->company_name,
+            ]);
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'company_id' => $company->id,
+                'role' => 'admin', // First user of a company is an admin
+            ]);
+        });
 
         event(new Registered($user));
 

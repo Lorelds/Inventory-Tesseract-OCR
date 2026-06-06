@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\Tenantable;
+
 class Store extends Model
 {
+    use Tenantable;
+
     protected $fillable = [
         'name',
         'address',

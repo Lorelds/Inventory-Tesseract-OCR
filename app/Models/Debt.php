@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\Tenantable;
+
 class Debt extends Model
 {
+    use Tenantable;
+
     protected $fillable = [
         'receipt_id',
         'store_id',

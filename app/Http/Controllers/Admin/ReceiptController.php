@@ -11,6 +11,7 @@ use App\Models\Store;
 use App\Models\Product;
 use App\Models\ReceiptItem;
 use App\Models\Debt;
+use Illuminate\Support\Facades\Http;
 
 use Intervention\Image\Facades\Image as InterventionImage;
 
@@ -96,26 +97,62 @@ class ReceiptController extends Controller
         // Get full path for Tesseract processing
         $fullImagePath = Storage::disk('public')->path($imagePath);
 
-        // Preprocess image for better OCR
-        $preprocessedPath = $this->preprocessImage($fullImagePath);
-
-        // Initialize and run Tesseract OCR
-        $tesseract = new \thiagoalessio\TesseractOCR\TesseractOCR($preprocessedPath);
-        $tesseract->executable('C:\Program Files\Tesseract-OCR\tesseract.exe');
-        $tesseract->tessdataDir(storage_path('app/tessdata'));
-        $tesseract->lang('ind'); // Indonesian language as per user requirements
-        $tesseract->allowlist(range('a', 'z'), range('A', 'Z'), range(0, 9), ['.', ',', ':', '%', '$', '/', '(', ')', '-']);
+        // Use Gemini API instead of Tesseract
+        $apiKey = config('services.gemini.key');
         
-        // Extract text from image
-        $rawText = $tesseract->run();
+        $base64Image = base64_encode(file_get_contents($fullImagePath));
+        $mimeType = mime_content_type($fullImagePath);
 
-        // Clean up preprocessed image
-        if (file_exists($preprocessedPath) && $preprocessedPath !== $fullImagePath) {
-            unlink($preprocessedPath);
+        $prompt = "Extract the receipt details into JSON. We need the following fields exactly: 'store_name' (string), 'transaction_date' (YYYY-MM-DD format), 'total_amount' (number), and an array of 'items' containing 'name' (string), 'quantity' (raw quantity from the leftmost column, number), 'measure' (extract the multiplier like 6 for 6m or 25 for 25kg, default to 1, number), 'unit_price' (number), 'subtotal' (number). If a field is not found, leave it null or 0. Respond with ONLY the JSON object, nothing else.";
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey, [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt],
+                        [
+                            'inlineData' => [
+                                'mimeType' => $mimeType,
+                                'data' => $base64Image
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'generationConfig' => [
+                'responseMimeType' => 'application/json',
+            ]
+        ]);
+
+        $rawText = "AI Extracted Data";
+        $parsedData = [
+            'store_name' => null,
+            'transaction_date' => null,
+            'total_amount' => 0,
+            'items' => []
+        ];
+
+        if ($response->successful()) {
+            $responseData = $response->json();
+            $content = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
+            
+            // Clean up any markdown code blocks if gemini returns them despite response_mime_type
+            $content = preg_replace('/```json\s*/', '', $content);
+            $content = preg_replace('/```\s*/', '', $content);
+            
+            $aiData = json_decode($content, true);
+            if (is_array($aiData)) {
+                $parsedData = array_merge($parsedData, $aiData);
+                $rawText = json_encode($parsedData, JSON_PRETTY_PRINT);
+                
+                // Keep ai items in session so validate page can use them
+                session()->put('ai_receipt_items_' . $imagePath, $parsedData['items'] ?? []);
+            }
+        } else {
+            \Log::error('Gemini API Error: ' . $response->body());
         }
-
-        // Parse extracted text using regex
-        $parsedData = $this->parseReceiptText($rawText);
 
         // Create receipt record
         $receipt = Receipt::create([
@@ -135,7 +172,7 @@ class ReceiptController extends Controller
 
         // Redirect to validation page
         return redirect()->route('admin.receipts.validate', $receipt->id)
-            ->with('success', 'Receipt uploaded successfully. Please validate the extracted data.');
+            ->with('success', __('Receipt uploaded successfully. Please validate the extracted data.'));
     }
 
     // Show validation form
@@ -144,12 +181,17 @@ class ReceiptController extends Controller
         $receipt = Receipt::with('store')->findOrFail($id);
         $stores = Store::all();
         $categories = Product::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category');
-        $parsedData = $this->parseReceiptText($receipt->raw_text);
+        
+        // Use session items if available, or parse raw JSON
+        $parsedData = json_decode($receipt->raw_text, true) ?? [];
+        if (session()->has('ai_receipt_items_' . $receipt->image_path)) {
+            $parsedData['items'] = session('ai_receipt_items_' . $receipt->image_path);
+        }
 
         // If already validated, redirect to list or show message
         if ($receipt->status === 'validated') {
             return redirect()->route('admin.receipts.index')
-                ->with('info', 'This receipt has already been validated.');
+                ->with('info', __('This receipt has already been validated.'));
         }
 
         return view('admin.receipts.validate', compact('receipt', 'stores', 'categories', 'parsedData'));
@@ -198,7 +240,7 @@ class ReceiptController extends Controller
         }
 
         return redirect()->route('admin.receipts.index')
-            ->with('success', 'Receipt validated and processed successfully.');
+            ->with('success', __('Receipt validated and processed successfully.'));
     }
 
     public function destroy(\App\Models\Receipt $receipt)
@@ -240,7 +282,7 @@ class ReceiptController extends Controller
         $receipt->delete();
 
         return redirect()->route('admin.receipts.index')
-            ->with('success', 'Receipt completely deleted. Inventory and debts reverted.');
+            ->with('success', __('Receipt completely deleted. Inventory and debts reverted.'));
     }
 
     // Preprocess image for better OCR results
@@ -268,119 +310,7 @@ class ReceiptController extends Controller
         return $preprocessedPath;
     }
 
-    // Parse receipt text using regex patterns
-    private function parseReceiptText($text)
-    {
-        $data = [];
-        $lines = explode("\n", $text);
-        
-        // Clean up empty lines
-        $lines = array_values(array_filter(array_map('trim', $lines)));
 
-        // Extract store name (Heuristic: First line that isn't just a single word or generic like "Logo")
-        foreach ($lines as $line) {
-            if (strlen($line) > 3 && !preg_match('/logo|details|from|to/i', $line)) {
-                $data['store_name'] = $line;
-                break;
-            }
-        }
-
-        // Extract date (various formats)
-        $datePatterns = [
-            '/(?:Date|RecelptDate|Tanggal)[\s:]*([A-Za-z0-9\s,\/\-]+)/i',
-            '/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/',
-            '/\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2}/',
-            '/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s\-,\/]+\d{1,2}(st|nd|rd|th)?[\s\-,\/]+\d{2,4}/i',
-        ];
-
-        foreach ($datePatterns as $pattern) {
-            if (preg_match($pattern, $text, $matches)) {
-                $dateStr = isset($matches[1]) ? $matches[1] : $matches[0];
-                try {
-                    $data['transaction_date'] = date('Y-m-d', strtotime(str_replace(['st','nd','rd','th'], '', $dateStr)));
-                } catch (\Exception $e) {
-                    $data['transaction_date'] = date('Y-m-d');
-                }
-                break;
-            }
-        }
-
-        // Extract total amount (Look for Total, Amount, or common OCR misreads like Tata)
-        $totalPatterns = [
-            '/(?:TOTAL|AMOUNT\s+(?:DUE|PAYABLE)|BALANCE|TATA|SUBTOTAL)[\s:]*[A-Z$€£]*\s*(\d+[,.]\d{2})/i',
-        ];
-
-        $totalsFound = [];
-        foreach ($totalPatterns as $pattern) {
-            if (preg_match_all($pattern, $text, $matches)) {
-                foreach ($matches[1] as $match) {
-                    $totalsFound[] = (float) str_replace(',', '', $match);
-                }
-            }
-        }
-        // If multiple totals found (like Subtotal and Total), take the largest one
-        if (!empty($totalsFound)) {
-            $data['total_amount'] = max($totalsFound);
-        }
-
-        // Extract items
-        $itemLines = [];
-        foreach ($lines as $line) {
-            // Pattern 1: [Name] [Qty] [Price] [Total] e.g. "ItemName 4 45.00 USD180.00"
-            // Pattern 2: [Name] [Qty]x[Price] e.g. "ItemName 2 x 50.00"
-            if (preg_match('/^(.+?)\s+(\d+(?:\.\d+)?)\s*[x×]?\s*[A-Z$€£]*\s*(\d+[,.]\d{2})(?:\s+[A-Z$€£]*\s*\d+[,.]\d{2})?$/i', $line, $matches) ||
-                preg_match('/^(.+?)(?<!\s)(\d+)\s+([A-Z$€£]*\s*\d+[,.]\d{2})\s+[A-Z$€£]*\s*(\d+[,.]\d{2})$/i', $line, $matches)) { // Handles missing space before Qty
-                
-                $qty = (float) $matches[2];
-                $price = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', $matches[3]));
-                
-                // Exclude lines that are obviously not items (like "item HRS/ATY Rate Subtotal")
-                if (strtolower(trim($matches[1])) !== 'item' && $qty > 0) {
-                    $itemLines[] = [
-                        'name' => trim($matches[1]),
-                        'quantity' => $qty,
-                        'unit_price' => $price,
-                    ];
-                }
-            } 
-            // Pattern 3 (Swiss/Euro robust): [Qty]x[Name] [@] [Price] [Currency] [Total]
-            // e.g., "2xLatteMacehiato84.50CHF 9.00" or "IxGloki a5.00CHF5.00"
-            elseif (preg_match('/^([0-9Il]+)[xX×]\s*(.*?)(?:\s+|8|a|à|@)+(\d+[,.]\d{2})(?:\s*[A-Za-z$€£]*\s*)?(\d+[,.]\d{2})?$/ui', $line, $matches)) {
-                $qty = (float) str_replace(['I', 'l'], '1', $matches[1]);
-                $name = trim($matches[2]);
-                $price = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', $matches[3]));
-                
-                if (strtolower($name) !== 'item' && $qty > 0) {
-                    $itemLines[] = [
-                        'name' => $name,
-                        'quantity' => $qty,
-                        'unit_price' => $price,
-                    ];
-                }
-            }
-            // Pattern 4 (Indonesian Nota / Hardware Store): [Qty] [Name] [Unit Price] [Total]
-            // e.g., "10 Pasir 0.25 x 6m 33.500 2.010.000"
-            elseif (preg_match('/^(\d+)\s+(.+?)\s+([\d.,]{4,})\s+([\d.,]{4,})$/i', trim($line), $matches)) {
-                $qty = (float) $matches[1];
-                $name = trim($matches[2]);
-                $price = (float) preg_replace('/[^0-9]/', '', $matches[3]);
-                
-                if (strtolower($name) !== 'item' && $qty > 0) {
-                    $itemLines[] = [
-                        'name' => $name,
-                        'quantity' => $qty,
-                        'unit_price' => $price,
-                    ];
-                }
-            }
-        }
-
-        if (!empty($itemLines)) {
-            $data['items'] = $itemLines;
-        }
-
-        return $data;
-    }
 
     // Process receipt items and update inventory
     private function processReceiptItems($receipt, $items)

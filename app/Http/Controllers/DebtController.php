@@ -106,7 +106,7 @@ class DebtController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 'Payment recorded successfully!');
+            return redirect()->back()->with('success', __('Payment recorded successfully!'));
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Error recording payment: ' . $e->getMessage());

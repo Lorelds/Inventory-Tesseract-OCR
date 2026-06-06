@@ -127,22 +127,22 @@
                                 @forelse($items as $index => $item)
                                     <tr class="item-row">
                                         <td>
-                                            <input type="text" class="form-control" name="items[{{ $index }}][name]" value="{{ old('items.'.$index.'.name', $item['name'] ?? '') }}" required>
+                                            <input type="text" class="form-control" name="items[{{ $index }}][name]" value="{{ old('items.'.$index.'.name', $item['name'] ?? '') }}" style="min-width: 150px;" required>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" name="items[{{ $index }}][category]" value="{{ old('items.'.$index.'.category') }}" list="categoryList" placeholder="e.g. Paku">
+                                            <input type="text" class="form-control" name="items[{{ $index }}][category]" value="{{ old('items.'.$index.'.category') }}" list="categoryList" placeholder="e.g. Paku" style="min-width: 120px;">
                                         </td>
                                         <td>
-                                            <input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[{{ $index }}][quantity]" value="{{ old('items.'.$index.'.quantity', $item['quantity'] ?? 1) }}" style="min-width: 70px;" required>
+                                            <input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[{{ $index }}][quantity]" value="{{ old('items.'.$index.'.quantity', $item['quantity'] ?? 1) }}" style="min-width: 80px;" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0.01" class="form-control measure-input px-2" name="items[{{ $index }}][measure]" value="{{ old('items.'.$index.'.measure', $item['measure'] ?? 1) }}" style="min-width: 70px;">
+                                            <input type="number" step="0.01" min="0.01" class="form-control measure-input px-2" name="items[{{ $index }}][measure]" value="{{ old('items.'.$index.'.measure', $item['measure'] ?? 1) }}" style="min-width: 80px;">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control price-input px-2" name="items[{{ $index }}][unit_price]" value="{{ old('items.'.$index.'.unit_price', $item['unit_price'] ?? 0) }}" style="min-width: 100px;" required>
+                                            <input type="number" step="0.01" class="form-control price-input px-2" name="items[{{ $index }}][unit_price]" value="{{ old('items.'.$index.'.unit_price', $item['unit_price'] ?? 0) }}" style="min-width: 120px;" required>
                                         </td>
                                         <td>
-                                            <input type="number" class="form-control subtotal-input bg-light" value="{{ (float)($item['quantity'] ?? 1) * (float)($item['measure'] ?? 1) * (float)($item['unit_price'] ?? 0) }}" readonly tabindex="-1">
+                                            <input type="number" class="form-control subtotal-input bg-light" value="{{ (float)($item['quantity'] ?? 1) * (float)($item['measure'] ?? 1) * (float)($item['unit_price'] ?? 0) }}" style="min-width: 120px;" readonly tabindex="-1">
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-light text-danger remove-item-btn"><i class="ph-bold ph-trash"></i></button>
@@ -178,12 +178,12 @@
 
 <template id="itemRowTemplate">
     <tr class="item-row">
-        <td><input type="text" class="form-control" name="items[__INDEX__][name]" required></td>
-        <td><input type="text" class="form-control" name="items[__INDEX__][category]" list="categoryList" placeholder="e.g. Paku"></td>
-        <td><input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[__INDEX__][quantity]" value="1" style="min-width: 70px;" required></td>
-        <td><input type="number" step="0.01" min="0.01" class="form-control measure-input px-2" name="items[__INDEX__][measure]" value="1" style="min-width: 70px;"></td>
-        <td><input type="number" step="0.01" class="form-control price-input px-2" name="items[__INDEX__][unit_price]" value="0" style="min-width: 100px;" required></td>
-        <td><input type="number" class="form-control subtotal-input bg-light" value="0" readonly tabindex="-1"></td>
+        <td><input type="text" class="form-control" name="items[__INDEX__][name]" style="min-width: 150px;" required></td>
+        <td><input type="text" class="form-control" name="items[__INDEX__][category]" list="categoryList" placeholder="e.g. Paku" style="min-width: 120px;"></td>
+        <td><input type="number" step="1" min="1" class="form-control qty-input px-2" name="items[__INDEX__][quantity]" value="1" style="min-width: 80px;" required></td>
+        <td><input type="number" step="0.01" min="0.01" class="form-control measure-input px-2" name="items[__INDEX__][measure]" value="1" style="min-width: 80px;"></td>
+        <td><input type="number" step="0.01" class="form-control price-input px-2" name="items[__INDEX__][unit_price]" value="0" style="min-width: 120px;" required></td>
+        <td><input type="number" class="form-control subtotal-input bg-light" value="0" style="min-width: 120px;" readonly tabindex="-1"></td>
         <td class="text-center">
             <button type="button" class="btn btn-sm btn-light text-danger remove-item-btn"><i class="ph-bold ph-trash"></i></button>
         </td>

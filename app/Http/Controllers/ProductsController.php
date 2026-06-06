@@ -92,7 +92,7 @@ class ProductsController extends Controller
         Product::create($data);
 
         return redirect()->route('products.index')
-            ->with('success', 'Product created successfully.');
+            ->with('success', __('Product created successfully.'));
     }
 
     /**
@@ -158,7 +158,7 @@ class ProductsController extends Controller
         $product->update($request->all());
 
         return redirect()->route('products.index')
-            ->with('success', 'Product updated successfully.');
+            ->with('success', __('Product updated successfully.'));
     }
 
     /**
@@ -169,7 +169,7 @@ class ProductsController extends Controller
         $product->delete();
 
         return redirect()->route('products.index')
-            ->with('success', 'Product deleted successfully.');
+            ->with('success', __('Product deleted successfully.'));
     }
 
     // Generate SKU from product name
@@ -213,7 +213,7 @@ class ProductsController extends Controller
         } else {
             // Optional: prevent negative stock
             // if ($product->stock < $request->quantity) {
-            //     return redirect()->back()->with('error', 'Not enough stock to deduct.');
+            //     return redirect()->back()->with('error', __('Not enough stock to deduct.'));
             // }
             $product->decrement('stock', $request->quantity);
         }
@@ -229,6 +229,6 @@ class ProductsController extends Controller
         ]);
 
         return redirect()->route('products.show', $product->id)
-            ->with('success', 'Stock adjusted successfully.');
+            ->with('success', __('Stock adjusted successfully.'));
     }
 }

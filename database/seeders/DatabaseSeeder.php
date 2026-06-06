@@ -15,12 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $company1 = \App\Models\Company::firstOrCreate(['name' => 'Default Company 1']);
+        $company2 = \App\Models\Company::firstOrCreate(['name' => 'Default Company 2']);
+
         User::updateOrCreate(
             ['email' => 'owner@inventory.com'],
             [
                 'name' => 'Owner (Super Admin)',
                 'password' => bcrypt('password'),
                 'role' => 'super_admin',
+                'company_id' => $company1->id,
             ]
         );
 
@@ -30,6 +34,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Manager (Admin)',
                 'password' => bcrypt('password'),
                 'role' => 'admin',
+                'company_id' => $company2->id,
             ]
         );
     }

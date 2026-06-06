@@ -14,8 +14,7 @@
     </div>
     <div>
         <a href="{{ route('stores.create') }}" class="btn btn-primary">
-            <i class="ph-bold ph-plus"></i> Add New Store
-        </a>
+            <i class="ph-bold ph-plus"></i>{{ __('Add New Store') }}</a>
     </div>
 </div>
 
@@ -23,21 +22,21 @@
     <div class="card-body">
         <form action="{{ route('stores.index') }}" method="GET" class="row g-3 align-items-end">
             <div class="col-md-6">
-                <label class="form-label text-muted small mb-1">Search Stores</label>
+                <label class="form-label text-muted small mb-1">{{ __('Search Stores') }}</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white"><i class="ph ph-magnifying-glass"></i></span>
                     <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Search by name or phone...">
                 </div>
             </div>
             <div class="col-md-4">
-                <label class="form-label text-muted small mb-1">Sort By</label>
+                <label class="form-label text-muted small mb-1">{{ __('Sort By') }}</label>
                 <select name="sort" class="form-select">
-                    <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest First</option>
-                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name (A-Z)</option>
+                    <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>{{ __('Newest First') }}</option>
+                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>{{ __('Name (A-Z)') }}</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100"><i class="ph-bold ph-funnel me-1"></i> Filter</button>
+                <button type="submit" class="btn btn-primary w-100"><i class="ph-bold ph-funnel me-1"></i>{{ __('Filter') }}</button>
             </div>
         </form>
     </div>
@@ -50,10 +49,10 @@
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4">ID</th>
-                        <th>Store Name</th>
+                        <th>{{ __('Store Name') }}</th>
                         <th>Address</th>
-                        <th>Phone</th>
-                        <th class="text-end pe-4">Actions</th>
+                        <th>{{ __('Phone') }}</th>
+                        <th class="text-end pe-4">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -85,13 +84,13 @@
                             <td class="text-end pe-4">
                                 <div class="btn-group">
                                     @if(auth()->check() && auth()->user()->role === 'super_admin')
-                                    <a href="{{ route('stores.edit', $store->id) }}" class="btn btn-sm btn-light text-primary border" title="Edit">
+                                    <a href="{{ route('stores.edit', $store->id) }}" class="btn btn-sm btn-light text-primary border" title="{{ __('Edit') }}">
                                         <i class="ph-bold ph-pencil-simple"></i>
                                     </a>
                                     <form action="{{ route('stores.destroy', $store->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this store?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-light text-danger border" title="Delete">
+                                        <button type="submit" class="btn btn-sm btn-light text-danger border" title="{{ __('Delete') }}">
                                             <i class="ph-bold ph-trash"></i>
                                         </button>
                                     </form>

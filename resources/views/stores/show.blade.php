@@ -18,8 +18,7 @@
         </a>
         @if(auth()->check() && auth()->user()->role === 'super_admin')
         <a href="{{ route('stores.edit', $store->id) }}" class="btn btn-primary px-4 fw-medium ms-2">
-            <i class="ph-bold ph-pencil-simple me-1"></i> Edit Store
-        </a>
+            <i class="ph-bold ph-pencil-simple me-1"></i>{{ __('Edit Store') }}</a>
         @endif
     </div>
 </div>
@@ -33,7 +32,7 @@
             </div>
             <div class="card-body p-4">
                 <div class="mb-4">
-                    <div class="text-muted small mb-1">Store Name</div>
+                    <div class="text-muted small mb-1">{{ __('Store Name') }}</div>
                     <div class="fw-semibold fs-5 text-dark">{{ $store->name }}</div>
                 </div>
                 <div class="mb-4">
@@ -51,7 +50,7 @@
                     </div>
                 </div>
                 <div class="mt-4 pt-4 border-top">
-                    <div class="text-muted small mb-1">Total Receipts</div>
+                    <div class="text-muted small mb-1">{{ __('Total Receipts') }}</div>
                     <div class="fw-bold fs-3 text-primary">{{ $store->receipts()->count() }}</div>
                 </div>
             </div>
@@ -71,8 +70,8 @@
                             <tr>
                                 <th class="ps-4">Receipt ID</th>
                                 <th>Date</th>
-                                <th>Status</th>
-                                <th class="text-end pe-4">Total Amount</th>
+                                <th>{{ __('Status') }}</th>
+                                <th class="text-end pe-4">{{ __('Total Amount') }}</th>
                             </tr>
                         </thead>
                         <tbody>

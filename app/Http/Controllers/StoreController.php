@@ -59,7 +59,7 @@ class StoreController extends Controller
         Store::create($request->all());
 
         return redirect()->route('stores.index')
-            ->with('success', 'Store created successfully.');
+            ->with('success', __('Store created successfully.'));
     }
 
     public function show(Store $store)
@@ -89,7 +89,7 @@ class StoreController extends Controller
         $store->update($request->all());
 
         return redirect()->route('stores.index')
-            ->with('success', 'Store updated successfully.');
+            ->with('success', __('Store updated successfully.'));
     }
 
     public function destroy(Store $store)
@@ -97,6 +97,6 @@ class StoreController extends Controller
         $store->delete();
 
         return redirect()->route('stores.index')
-            ->with('success', 'Store deleted successfully.');
+            ->with('success', __('Store deleted successfully.'));
     }
 }

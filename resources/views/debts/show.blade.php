@@ -31,10 +31,10 @@
                                 <th class="ps-4">Receipt ID</th>
                                 <th>Date</th>
                                 <th>Total Debt</th>
-                                <th>Paid Amount</th>
+                                <th>{{ __('Paid Amount') }}</th>
                                 <th>Remaining</th>
-                                <th>Status</th>
-                                <th class="text-end pe-4">Action</th>
+                                <th>{{ __('Status') }}</th>
+                                <th class="text-end pe-4">{{ __('Action') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -105,12 +105,12 @@
                                                     </div>
 
                                                     <div class="mb-3">
-                                                        <label class="form-label fw-medium">Payment Date <span class="text-danger">*</span></label>
+                                                        <label class="form-label fw-medium">{{ __('Payment Date') }}<span class="text-danger">*</span></label>
                                                         <input type="date" class="form-control" name="payment_date" value="{{ date('Y-m-d') }}" required>
                                                     </div>
 
                                                     <div class="mb-3">
-                                                        <label class="form-label fw-medium">Payment Method</label>
+                                                        <label class="form-label fw-medium">{{ __('Payment Method') }}</label>
                                                         <select class="form-select" name="payment_method">
                                                             <option value="Cash">Cash</option>
                                                             <option value="Bank Transfer">Bank Transfer</option>
@@ -120,7 +120,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-                                                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
                                                     <button type="submit" class="btn btn-primary px-4"><i class="ph-bold ph-check-circle me-1"></i> Submit Payment</button>
                                                 </div>
                                             </form>

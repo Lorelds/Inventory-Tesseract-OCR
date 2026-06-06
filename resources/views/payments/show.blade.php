@@ -31,9 +31,9 @@
                                 <th class="ps-4">Receipt ID</th>
                                 <th>Date</th>
                                 <th>Total Debt</th>
-                                <th>Paid Amount</th>
+                                <th>{{ __('Paid Amount') }}</th>
                                 <th>Remaining</th>
-                                <th class="text-end pe-4">Status</th>
+                                <th class="text-end pe-4">{{ __('Status') }}</th>
                             </tr>
                         </thead>
                         <tbody>

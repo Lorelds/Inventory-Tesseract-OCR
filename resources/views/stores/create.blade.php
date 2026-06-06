@@ -22,7 +22,7 @@
                     @csrf
                     
                     <div class="mb-4">
-                        <label for="name" class="form-label fw-medium">Store Name <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label fw-medium">{{ __('Store Name') }}<span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="ph ph-storefront"></i></span>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" placeholder="e.g. ABC Supermarket" required>
@@ -54,7 +54,7 @@
                     <hr class="my-4 border-light">
                     
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="{{ route('stores.index') }}" class="btn btn-light border">Cancel</a>
+                        <a href="{{ route('stores.index') }}" class="btn btn-light border">{{ __('Cancel') }}</a>
                         <button type="submit" class="btn btn-primary px-4">
                             <i class="ph-bold ph-floppy-disk me-1"></i> Save Store
                         </button>

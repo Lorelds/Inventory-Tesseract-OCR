@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\Tenantable;
+
 class StockMovement extends Model
 {
+    use Tenantable;
+
     use HasFactory;
 
     protected $fillable = [

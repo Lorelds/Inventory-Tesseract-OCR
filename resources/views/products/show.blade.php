@@ -15,8 +15,7 @@
     <div class="d-flex gap-2">
         @if(auth()->check() && auth()->user()->role === 'super_admin')
         <a href="{{ route('products.edit', $product->id) }}" class="btn btn-primary">
-            <i class="ph-bold ph-pencil-simple"></i> Edit Product
-        </a>
+            <i class="ph-bold ph-pencil-simple"></i>{{ __('Edit Product') }}</a>
         @endif
     </div>
 </div>
@@ -39,7 +38,7 @@
                         @if($product->stock <= 5 && $product->stock > 0)
                             <span class="badge bg-warning text-dark fs-6"><i class="ph-fill ph-warning"></i> {{ $product->stock }}</span>
                         @elseif($product->stock == 0)
-                            <span class="badge bg-danger fs-6"><i class="ph-fill ph-x-circle"></i> Out of Stock</span>
+                            <span class="badge bg-danger fs-6"><i class="ph-fill ph-x-circle"></i>{{ __('Out of Stock') }}</span>
                         @else
                             <span class="badge bg-success bg-opacity-25 text-success border border-success fs-6"><i class="ph-fill ph-check-circle"></i> {{ $product->stock }}</span>
                         @endif
@@ -57,11 +56,11 @@
                             <span class="fw-medium small">#{{ $product->id }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Buy Price</span>
+                            <span class="text-muted small">{{ __('Buy Price') }}</span>
                             <span class="fw-medium small text-danger">Rp {{ number_format($product->buy_price, 0, ',', '.') }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Sell Price</span>
+                            <span class="text-muted small">{{ __('Sell Price') }}</span>
                             <span class="fw-medium small text-success">Rp {{ number_format($product->sell_price, 0, ',', '.') }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
@@ -117,7 +116,7 @@
                                 <th>Type</th>
                                 <th>Qty</th>
                                 <th>Balance</th>
-                                <th class="pe-4">Notes</th>
+                                <th class="pe-4">{{ __('Notes') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -196,7 +195,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-2 pb-4 px-4">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
                     <button type="submit" class="btn btn-primary px-4">Save Adjustment</button>
                 </div>
             </form>
