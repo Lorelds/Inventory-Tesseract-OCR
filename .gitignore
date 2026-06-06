@@ -63,3 +63,14 @@ test4.php
 dump.php
 test_ocr*.php
 test_regex.php
+
+# Recent Test & Translation Scripts
+models.json
+new_models.json
+test_all_models.php
+test_api.php
+test_api_2.php
+test_api_models.php
+translate.php
+translate.py
+translate_controllers.php
