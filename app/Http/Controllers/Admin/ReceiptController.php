@@ -103,7 +103,10 @@ class ReceiptController extends Controller
         $base64Image = base64_encode(file_get_contents($fullImagePath));
         $mimeType = mime_content_type($fullImagePath);
 
-        $prompt = "Extract the receipt details into JSON. We need the following fields exactly: 'store_name' (string), 'transaction_date' (YYYY-MM-DD format), 'total_amount' (number), and an array of 'items' containing 'name' (string), 'quantity' (raw quantity from the leftmost column, number), 'measure' (extract the multiplier like 6 for 6m or 25 for 25kg, default to 1, number), 'unit_price' (number), 'subtotal' (number). If a field is not found, leave it null or 0. Respond with ONLY the JSON object, nothing else.";
+        $prompt = "Extract the receipt details into JSON. We need the following fields exactly: 'store_name' (string), 
+        'transaction_date' (YYYY-MM-DD format), 'total_amount' (number), and an array of 'items' containing 'name' (string),
+        'quantity' (raw quantity from the leftmost column, number), 'measure' (extract the multiplier like 6 for 6m or 25 for 25kg, default to 1, number), 
+        'unit_price' (number), 'subtotal' (number). If a field is not found, leave it null or 0. Respond with ONLY the JSON object, nothing else.";
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
