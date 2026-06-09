@@ -43,7 +43,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label for="store_id" class="form-label fw-medium">Store / Vendor <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="ph ph-storefront"></i></span>
@@ -62,17 +62,6 @@
                             @error('store_id')
                                 <div class="text-danger mt-1 small">{{ $message }}</div>
                             @enderror
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label for="payment_status" class="form-label fw-medium">Payment Status</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="ph ph-credit-card"></i></span>
-                                <select class="form-select @error('payment_status') is-invalid @enderror" id="payment_status" name="payment_status" required>
-                                    <option value="lunas">Lunas (Paid)</option>
-                                    <option value="hutang" selected>Hutang (Debt/Unpaid)</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
                     
