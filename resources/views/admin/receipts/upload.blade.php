@@ -102,6 +102,15 @@
         </div>
     </div>
 </div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255,255,255,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center;">
+    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem; border-width: 0.4rem;" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <h3 class="mt-4 text-primary fw-bold">🤖 AI is scanning your receipt...</h3>
+    <p class="text-muted fs-5">This usually takes about 5-10 seconds. Please wait.</p>
+</div>
 @endsection
 
 @push('scripts')
@@ -158,6 +167,10 @@
     }
     
     document.getElementById('uploadForm').addEventListener('submit', function() {
+        // Show loading overlay
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        // Update button
         const btn = document.getElementById('submitBtn');
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing OCR...';
         btn.disabled = true;

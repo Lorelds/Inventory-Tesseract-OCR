@@ -209,6 +209,9 @@ class ReceiptController extends Controller
         $validator = Validator::make($request->all(), [
             'transaction_date' => 'required|date',
             'total_amount' => 'required|numeric|min:0',
+            'payment_status' => 'required|in:lunas,hutang,partial',
+            'amount_paid' => 'nullable|required_if:payment_status,partial|numeric|min:0|max:'.$request->total_amount,
+            'payment_method' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.category' => 'nullable|string|max:255',
@@ -227,6 +230,7 @@ class ReceiptController extends Controller
         $receipt->update([
             'transaction_date' => $request->transaction_date,
             'total_amount' => $request->total_amount,
+            'payment_status' => $request->payment_status,
             'status' => 'validated',
             'validated_by' => auth()->id(),
             'validated_at' => now(),
@@ -235,12 +239,8 @@ class ReceiptController extends Controller
         // Process receipt items and update inventory
         $this->processReceiptItems($receipt, $request->items);
 
-        // Create debt record. If lunas, it goes directly to payments history.
-        if ($receipt->payment_status === 'hutang') {
-            $this->createDebtFromReceipt($receipt, false);
-        } elseif ($receipt->payment_status === 'lunas') {
-            $this->createDebtFromReceipt($receipt, true, $request->payment_method);
-        }
+        // Create debt record and any initial payments
+        $this->createDebtFromReceipt($receipt, $request->payment_status, $request->amount_paid, $request->payment_method);
 
         return redirect()->route('admin.receipts.index')
             ->with('success', __('Receipt validated and processed successfully.'));
@@ -387,27 +387,31 @@ class ReceiptController extends Controller
     }
 
     // Create debt record from validated receipt
-    private function createDebtFromReceipt($receipt, $isPaidInFull = false, $paymentMethod = 'Cash')
+    private function createDebtFromReceipt($receipt, $paymentStatus, $amountPaid = 0, $paymentMethod = 'Cash')
     {
-        $status = $isPaidInFull ? 'lunas' : 'hutang';
-        $paidAmount = $isPaidInFull ? $receipt->total_amount : 0;
+        $paidAmount = 0;
+        if ($paymentStatus === 'lunas') {
+            $paidAmount = $receipt->total_amount;
+        } elseif ($paymentStatus === 'partial') {
+            $paidAmount = $amountPaid ?? 0;
+        }
 
         $debt = Debt::create([
             'receipt_id' => $receipt->id,
             'store_id' => $receipt->store_id,
             'amount' => $receipt->total_amount,
             'paid_amount' => $paidAmount,
-            'status' => $status,
+            'status' => $paymentStatus,
             'notes' => 'Created from receipt #' . $receipt->id,
         ]);
 
-        if ($isPaidInFull && $receipt->total_amount > 0) {
+        if ($paidAmount > 0) {
             \App\Models\DebtPayment::create([
                 'debt_id' => $debt->id,
-                'amount_paid' => $receipt->total_amount,
+                'amount_paid' => $paidAmount,
                 'payment_date' => $receipt->transaction_date ?? now(),
                 'payment_method' => $paymentMethod ?? 'Cash',
-                'notes' => 'Paid in full on receipt validation',
+                'notes' => $paymentStatus === 'lunas' ? 'Paid in full on receipt validation' : 'Down payment (DP)',
             ]);
         }
     }

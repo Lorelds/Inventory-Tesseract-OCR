@@ -80,20 +80,34 @@
                             </button>
                         </div>
                     </div>
-                    @if($receipt->payment_status === 'lunas')
-                    <div class="row border-top pt-3 mt-1">
-                        <div class="col-md-6 mb-3">
-                            <label for="payment_method" class="form-label fw-medium text-success"><i class="ph-fill ph-check-circle me-1"></i> Payment Method <span class="text-danger">*</span></label>
-                            <select class="form-select border-success" id="payment_method" name="payment_method" required>
+                    <div class="row border-top pt-3 mt-1 bg-light bg-opacity-50 rounded">
+                        <div class="col-md-4 mb-3">
+                            <label for="payment_status" class="form-label fw-medium">Payment Status <span class="text-danger">*</span></label>
+                            <select class="form-select border-primary" id="payment_status" name="payment_status" required>
+                                <option value="lunas" {{ $receipt->payment_status === 'lunas' ? 'selected' : '' }}>Lunas (Paid in Full)</option>
+                                <option value="hutang" {{ $receipt->payment_status === 'hutang' ? 'selected' : '' }}>Belum Lunas (Hutang)</option>
+                                <option value="partial" {{ $receipt->payment_status === 'partial' ? 'selected' : '' }}>Dibayar Sebagian (DP)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3" id="amount_paid_container" style="display: none;">
+                            <label for="amount_paid" class="form-label fw-medium">Jumlah DP / Dibayar <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white fw-bold border-warning text-warning">Rp</span>
+                                <input type="number" step="0.01" class="form-control border-warning" id="amount_paid" name="amount_paid" value="{{ old('amount_paid') }}" placeholder="0">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3" id="payment_method_container" style="display: none;">
+                            <label for="payment_method" class="form-label fw-medium text-success"><i class="ph-fill ph-check-circle me-1"></i> Payment Method</label>
+                            <select class="form-select border-success" id="payment_method" name="payment_method">
                                 <option value="Cash">Cash</option>
                                 <option value="Bank Transfer">Bank Transfer</option>
                                 <option value="E-Wallet">E-Wallet</option>
                                 <option value="Other">Other</option>
                             </select>
-                            <div class="form-text">How was this receipt paid?</div>
                         </div>
                     </div>
-                    @endif
                 </div>
             </div>
             
@@ -326,6 +340,35 @@
                 }
             });
         }
+        // Payment Status Logic
+        const paymentStatus = document.getElementById('payment_status');
+        const amountPaidContainer = document.getElementById('amount_paid_container');
+        const paymentMethodContainer = document.getElementById('payment_method_container');
+        const amountPaidInput = document.getElementById('amount_paid');
+        const paymentMethodInput = document.getElementById('payment_method');
+
+        function updatePaymentFields() {
+            if (paymentStatus.value === 'lunas') {
+                amountPaidContainer.style.display = 'none';
+                paymentMethodContainer.style.display = 'block';
+                amountPaidInput.required = false;
+                paymentMethodInput.required = true;
+            } else if (paymentStatus.value === 'partial') {
+                amountPaidContainer.style.display = 'block';
+                paymentMethodContainer.style.display = 'block';
+                amountPaidInput.required = true;
+                paymentMethodInput.required = true;
+            } else { // hutang
+                amountPaidContainer.style.display = 'none';
+                paymentMethodContainer.style.display = 'none';
+                amountPaidInput.required = false;
+                paymentMethodInput.required = false;
+            }
+        }
+
+        paymentStatus.addEventListener('change', updatePaymentFields);
+        // Initial setup
+        updatePaymentFields();
     });
 </script>
 @endpush

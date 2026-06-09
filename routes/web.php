@@ -8,6 +8,9 @@ use App\Http\Controllers\StoreController;
 use App\Http\Controllers\DebtController;
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
     return redirect()->route('login');
 });
 
