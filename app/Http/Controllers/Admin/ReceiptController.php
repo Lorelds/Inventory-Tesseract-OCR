@@ -167,11 +167,8 @@ class ReceiptController extends Controller
             'total_amount' => $parsedData['total_amount'] ?? 0.00,
             'status' => 'pending',
             'type' => $request->type,
-            'payment_status' => $request->payment_status ?? 'hutang',
+            'payment_status' => 'hutang', // Default to hutang, will be confirmed in validation
         ]);
-
-        // If payment is lunas, no debt created
-        // If payment is hutang, debt will be created after validation
 
         // Redirect to validation page
         return redirect()->route('admin.receipts.validate', $receipt->id)
@@ -230,7 +227,7 @@ class ReceiptController extends Controller
         $receipt->update([
             'transaction_date' => $request->transaction_date,
             'total_amount' => $request->total_amount,
-            'payment_status' => $request->payment_status,
+            'payment_status' => $request->payment_status === 'partial' ? 'hutang' : $request->payment_status,
             'status' => 'validated',
             'validated_by' => auth()->id(),
             'validated_at' => now(),
