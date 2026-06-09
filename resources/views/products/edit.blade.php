@@ -127,22 +127,60 @@
 
 @push('scripts')
 <script>
+    const imagePreview = document.getElementById('imagePreview');
+    const imageInput = document.getElementById('image');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
     function previewImage(input) {
-        const preview = document.getElementById('imagePreview');
-        const placeholder = document.getElementById('uploadPlaceholder');
-        
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             
             reader.onload = function(e) {
-                preview.style.backgroundImage = `url('${e.target.result}')`;
-                preview.style.backgroundSize = 'cover';
-                preview.style.backgroundPosition = 'center';
-                placeholder.style.display = 'none';
+                imagePreview.style.backgroundImage = `url('${e.target.result}')`;
+                imagePreview.style.backgroundSize = 'cover';
+                imagePreview.style.backgroundPosition = 'center';
+                uploadPlaceholder.style.display = 'none';
             }
             
             reader.readAsDataURL(input.files[0]);
         }
+    }
+
+    // Drag and drop logic
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        imagePreview.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        imagePreview.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        imagePreview.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        imagePreview.classList.add('border-primary');
+        imagePreview.classList.remove('border-dashed');
+    }
+
+    function unhighlight(e) {
+        imagePreview.classList.remove('border-primary');
+        imagePreview.classList.add('border-dashed');
+    }
+
+    imagePreview.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        let dt = e.dataTransfer;
+        let files = dt.files;
+        imageInput.files = files;
+        previewImage(imageInput);
     }
 </script>
 @endpush

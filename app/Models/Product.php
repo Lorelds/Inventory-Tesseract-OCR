@@ -17,6 +17,7 @@ class Product extends Model
         'buy_price',
         'sell_price',
         'stock',
+        'image_path',
     ];
 
     public function receiptItems()
