@@ -37,7 +37,17 @@
                         </div>
                     </div>
                     <input class="form-control d-none @error('image') is-invalid @enderror" type="file" id="image" name="image" accept="image/*" onchange="previewImage(this)">
-                    <div class="form-text mt-2"><i class="ph ph-info"></i> Uploading a new image will replace the existing one.</div>
+                    <input type="hidden" name="remove_image" id="remove_image_input" value="0">
+                    
+                    @if($product->image_path)
+                        <div class="mt-2 text-center" id="removeImageContainer">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage()">
+                                <i class="ph-bold ph-trash me-1"></i> Remove Image
+                            </button>
+                        </div>
+                    @endif
+                    
+                    <div class="form-text mt-2" id="uploadHint"><i class="ph ph-info"></i> Uploading a new image will replace the existing one.</div>
                     @error('image')
                         <div class="text-danger mt-1 small">{{ $message }}</div>
                     @enderror
@@ -130,6 +140,8 @@
     const imagePreview = document.getElementById('imagePreview');
     const imageInput = document.getElementById('image');
     const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const removeImageInput = document.getElementById('remove_image_input');
+    const removeImageContainer = document.getElementById('removeImageContainer');
 
     function previewImage(input) {
         if (input.files && input.files[0]) {
@@ -140,10 +152,27 @@
                 imagePreview.style.backgroundSize = 'cover';
                 imagePreview.style.backgroundPosition = 'center';
                 uploadPlaceholder.style.display = 'none';
+                if(removeImageContainer) removeImageContainer.style.display = 'block';
+                removeImageInput.value = '0'; // reset remove flag
             }
             
             reader.readAsDataURL(input.files[0]);
         }
+    }
+
+    function removeImage() {
+        // Clear preview
+        imagePreview.style.backgroundImage = 'none';
+        uploadPlaceholder.style.display = 'block';
+        
+        // Clear input file
+        imageInput.value = '';
+        
+        // Set flag to remove on server
+        removeImageInput.value = '1';
+        
+        // Hide remove button
+        if(removeImageContainer) removeImageContainer.style.display = 'none';
     }
 
     // Drag and drop logic
