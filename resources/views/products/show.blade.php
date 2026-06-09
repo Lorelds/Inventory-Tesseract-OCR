@@ -22,66 +22,76 @@
 
 <div class="row">
     <div class="col-md-4 mb-4 mb-md-0">
-        <!-- Status Card -->
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center p-5">
-                <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
-                    <i class="ph-fill ph-package text-primary" style="font-size: 4rem;"></i>
+        <!-- Image & Status Card -->
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <!-- Product Image Hero -->
+            <div class="bg-light d-flex align-items-center justify-content-center position-relative" style="height: 280px;">
+                @if($product->image_path)
+                    <img src="{{ Storage::url($product->image_path) }}" alt="{{ $product->name }}" class="img-fluid w-100 h-100 object-fit-cover">
+                @else
+                    <div class="text-center text-muted">
+                        <i class="ph-fill ph-image mb-2" style="font-size: 4rem; opacity: 0.5;"></i>
+                        <p class="mb-0 small fw-medium">No Image Available</p>
+                    </div>
+                @endif
+                <div class="position-absolute top-0 end-0 p-3">
+                    @if($product->stock <= 5 && $product->stock > 0)
+                        <span class="badge bg-warning text-dark shadow-sm px-3 py-2 rounded-pill"><i class="ph-fill ph-warning me-1"></i> Low Stock</span>
+                    @elseif($product->stock == 0)
+                        <span class="badge bg-danger shadow-sm px-3 py-2 rounded-pill"><i class="ph-fill ph-x-circle me-1"></i> Out of Stock</span>
+                    @else
+                        <span class="badge bg-success shadow-sm px-3 py-2 rounded-pill"><i class="ph-fill ph-check-circle me-1"></i> In Stock</span>
+                    @endif
                 </div>
-                <h4 class="mb-1">{{ $product->name }}</h4>
-                <p class="text-muted mb-4 font-monospace">{{ $product->sku }}</p>
+            </div>
+
+            <div class="card-body p-4">
+                <h4 class="mb-1 fw-bold">{{ $product->name }}</h4>
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <p class="text-muted mb-0 font-monospace small"><i class="ph ph-barcode me-1"></i>{{ $product->sku }}</p>
+                    @if($product->category)
+                        <span class="badge bg-light text-secondary border px-2 py-1">{{ $product->category }}</span>
+                    @endif
+                </div>
                 
-                <div class="p-3 bg-light rounded-3 text-start mb-4">
-                    <div class="text-muted small fw-medium mb-1 text-uppercase tracking-wider">Current Status</div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fs-5 fw-semibold">Stock Level</span>
-                        @if($product->stock <= 5 && $product->stock > 0)
-                            <span class="badge bg-warning text-dark fs-6"><i class="ph-fill ph-warning"></i> {{ $product->stock }}</span>
-                        @elseif($product->stock == 0)
-                            <span class="badge bg-danger fs-6"><i class="ph-fill ph-x-circle"></i>{{ __('Out of Stock') }}</span>
-                        @else
-                            <span class="badge bg-success bg-opacity-25 text-success border border-success fs-6"><i class="ph-fill ph-check-circle"></i> {{ $product->stock }}</span>
-                        @endif
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 text-center h-100 border border-light-subtle">
+                            <div class="text-muted small fw-medium mb-1"><i class="ph ph-stack me-1"></i>Stock</div>
+                            <div class="fs-4 fw-bold {{ $product->stock == 0 ? 'text-danger' : 'text-dark' }}">{{ $product->stock }}</div>
+                        </div>
                     </div>
-                    <div class="mt-3 text-center">
-                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#adjustStockModal">
-                            <i class="ph-bold ph-faders"></i> Adjust Stock Manually
-                        </button>
-                    </div>
-                    <div class="p-3 bg-light rounded-3 text-start mt-4">
-                        <div class="text-muted small fw-medium mb-3 text-uppercase tracking-wider border-bottom pb-2">Information Overview</div>
-                        
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Product ID</span>
-                            <span class="fw-medium small">#{{ $product->id }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">{{ __('Buy Price') }}</span>
-                            <span class="fw-medium small text-danger">Rp {{ number_format($product->buy_price, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">{{ __('Sell Price') }}</span>
-                            <span class="fw-medium small text-success">Rp {{ number_format($product->sell_price, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Margin</span>
-                            <span class="fw-medium small text-primary">
+                    <div class="col-6">
+                        <div class="p-3 bg-primary bg-opacity-10 rounded-3 text-center h-100 border border-primary border-opacity-25">
+                            <div class="text-primary small fw-medium mb-1"><i class="ph ph-trend-up me-1"></i>Margin</div>
+                            <div class="fs-4 fw-bold text-primary">
                                 @if($product->buy_price > 0)
                                     {{ number_format((($product->sell_price - $product->buy_price) / $product->buy_price) * 100, 1) }}%
                                 @else
                                     100%
                                 @endif
-                            </span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 mt-3 pt-2 border-top">
-                            <span class="text-muted small">Date Added</span>
-                            <span class="fw-medium small">{{ $product->created_at->format('d M Y') }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted small">Last Updated</span>
-                            <span class="fw-medium small">{{ $product->updated_at->format('d M Y') }}</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 text-start mb-4">
+                    <div class="text-muted small fw-bold mb-3 text-uppercase tracking-wider border-bottom pb-2">Pricing</div>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted"><i class="ph ph-shopping-cart me-2"></i>{{ __('Buy Price') }}</span>
+                        <span class="fw-bold text-danger">Rp {{ number_format($product->buy_price, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted"><i class="ph ph-tag me-2"></i>{{ __('Sell Price') }}</span>
+                        <span class="fw-bold text-success fs-5">Rp {{ number_format($product->sell_price, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <button type="button" class="btn btn-outline-secondary w-100 fw-medium" data-bs-toggle="modal" data-bs-target="#adjustStockModal">
+                        <i class="ph-bold ph-faders me-2"></i> Adjust Stock Manually
+                    </button>
                 </div>
             </div>
         </div>

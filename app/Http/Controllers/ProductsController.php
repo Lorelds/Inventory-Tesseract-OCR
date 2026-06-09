@@ -78,6 +78,7 @@ class ProductsController extends Controller
             'buy_price' => 'required|numeric|min:0',
             'sell_price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -86,9 +87,13 @@ class ProductsController extends Controller
                 ->withInput();
         }
 
-        $data = $request->all();
+        $data = $request->except('image');
         $data['sku'] = $this->generateSKU($data['name']);
         
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
         Product::create($data);
 
         return redirect()->route('products.index')
@@ -147,6 +152,7 @@ class ProductsController extends Controller
             'buy_price' => 'required|numeric|min:0',
             'sell_price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -155,7 +161,17 @@ class ProductsController extends Controller
                 ->withInput();
         }
 
-        $product->update($request->all());
+        $data = $request->except('image');
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($product->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($product->image_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($data);
 
         return redirect()->route('products.index')
             ->with('success', __('Product updated successfully.'));
@@ -166,6 +182,11 @@ class ProductsController extends Controller
      */
     public function destroy(Product $product)
     {
+        // Delete image if exists
+        if ($product->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($product->image_path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_path);
+        }
+
         $product->delete();
 
         return redirect()->route('products.index')

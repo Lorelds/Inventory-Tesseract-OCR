@@ -78,9 +78,15 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    <div class="p-2 bg-light rounded text-success">
-                                        <i class="ph-fill ph-package fs-5"></i>
-                                    </div>
+                                    @if($product->image_path)
+                                        <div class="bg-light rounded overflow-hidden shadow-sm" style="width: 40px; height: 40px;">
+                                            <img src="{{ Storage::url($product->image_path) }}" alt="{{ $product->name }}" class="w-100 h-100 object-fit-cover">
+                                        </div>
+                                    @else
+                                        <div class="p-2 bg-light rounded text-success d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="ph-fill ph-package fs-5"></i>
+                                        </div>
+                                    @endif
                                     <a href="{{ route('products.show', $product->id) }}" class="fw-medium text-dark text-decoration-none hover-primary">
                                         {{ $product->name }}
                                     </a>

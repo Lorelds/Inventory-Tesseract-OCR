@@ -14,31 +14,59 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-8 col-lg-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <form action="{{ route('products.update', $product->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
+<form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    @method('PUT')
+    <div class="row">
+        <!-- Left Column: Image Upload -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <h5 class="card-title fw-semibold mb-4">Product Image</h5>
+                    
+                    <div class="position-relative mb-3">
+                        <div id="imagePreview" class="bg-light rounded-3 d-flex align-items-center justify-content-center overflow-hidden border border-dashed border-2" 
+                             style="height: 250px; cursor: pointer; @if($product->image_path) background-image: url('{{ Storage::url($product->image_path) }}'); background-size: cover; background-position: center; @endif" 
+                             onclick="document.getElementById('image').click()">
+                            
+                            <div class="text-muted text-center" id="uploadPlaceholder" style="@if($product->image_path) display: none; @endif">
+                                <i class="ph-bold ph-image fs-1 mb-2"></i>
+                                <p class="mb-0 small fw-medium">Click or Drag Image Here</p>
+                                <p class="text-muted" style="font-size: 0.75rem;">PNG, JPG, GIF up to 2MB</p>
+                            </div>
+                        </div>
+                    </div>
+                    <input class="form-control d-none @error('image') is-invalid @enderror" type="file" id="image" name="image" accept="image/*" onchange="previewImage(this)">
+                    <div class="form-text mt-2"><i class="ph ph-info"></i> Uploading a new image will replace the existing one.</div>
+                    @error('image')
+                        <div class="text-danger mt-1 small">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Product Details -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-semibold mb-4">Product Details</h5>
                     
                     <div class="mb-4">
-                        <label for="name" class="form-label fw-medium">{{ __('Product Name') }}<span class="text-danger">*</span></label>
+                        <label for="name" class="form-label fw-medium">{{ __('Product Name') }} <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="ph ph-package"></i></span>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $product->name) }}" required>
+                            <span class="input-group-text bg-light border-end-0"><i class="ph ph-package text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0 @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $product->name) }}" required>
                         </div>
                         @error('name')
                             <div class="text-danger mt-1 small">{{ $message }}</div>
                         @enderror
                     </div>
                     
-
                     <div class="mb-4">
                         <label for="category" class="form-label fw-medium">{{ __('Category') }}</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="ph ph-tag"></i></span>
-                            <input type="text" class="form-control @error('category') is-invalid @enderror" id="category" name="category" value="{{ old('category', $product->category) }}" placeholder="e.g. Paku, Bendrat, Seng">
+                            <span class="input-group-text bg-light border-end-0"><i class="ph ph-tag text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0 @error('category') is-invalid @enderror" id="category" name="category" value="{{ old('category', $product->category) }}" placeholder="e.g. Paku, Bendrat, Seng">
                         </div>
                         <div class="form-text mt-1"><i class="ph ph-info"></i> Group this product. Leave blank if none.</div>
                         @error('category')
@@ -47,11 +75,11 @@
                     </div>
                     
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label for="buy_price" class="form-label fw-medium">{{ __('Buy Price') }}<span class="text-danger">*</span></label>
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <label for="buy_price" class="form-label fw-medium">{{ __('Buy Price') }} <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light fw-bold">Rp</span>
-                                <input type="number" step="0.01" class="form-control @error('buy_price') is-invalid @enderror" id="buy_price" name="buy_price" value="{{ old('buy_price', $product->buy_price) }}" required>
+                                <span class="input-group-text bg-light border-end-0 fw-bold text-muted">Rp</span>
+                                <input type="number" step="0.01" class="form-control border-start-0 ps-0 @error('buy_price') is-invalid @enderror" id="buy_price" name="buy_price" value="{{ old('buy_price', $product->buy_price) }}" required>
                             </div>
                             @error('buy_price')
                                 <div class="text-danger mt-1 small">{{ $message }}</div>
@@ -59,10 +87,10 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <label for="sell_price" class="form-label fw-medium">{{ __('Sell Price') }}<span class="text-danger">*</span></label>
+                            <label for="sell_price" class="form-label fw-medium">{{ __('Sell Price') }} <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light fw-bold">Rp</span>
-                                <input type="number" step="0.01" class="form-control @error('sell_price') is-invalid @enderror" id="sell_price" name="sell_price" value="{{ old('sell_price', $product->sell_price) }}" required>
+                                <span class="input-group-text bg-light border-end-0 fw-bold text-muted">Rp</span>
+                                <input type="number" step="0.01" class="form-control border-start-0 ps-0 @error('sell_price') is-invalid @enderror" id="sell_price" name="sell_price" value="{{ old('sell_price', $product->sell_price) }}" required>
                             </div>
                             @error('sell_price')
                                 <div class="text-danger mt-1 small">{{ $message }}</div>
@@ -71,10 +99,10 @@
                     </div>
                     
                     <div class="mb-4">
-                        <label for="stock" class="form-label fw-medium">Current Stock</label>
+                        <label for="stock" class="form-label fw-medium">Current Stock <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="ph ph-stack"></i></span>
-                            <input type="number" class="form-control @error('stock') is-invalid @enderror" id="stock" name="stock" value="{{ old('stock', $product->stock) }}" required>
+                            <span class="input-group-text bg-light border-end-0"><i class="ph ph-stack text-muted"></i></span>
+                            <input type="number" class="form-control border-start-0 ps-0 @error('stock') is-invalid @enderror" id="stock" name="stock" value="{{ old('stock', $product->stock) }}" required>
                         </div>
                         <div class="form-text mt-2"><i class="ph ph-info"></i> Adjusting stock manually is not recommended. Use receipts to update stock dynamically.</div>
                         @error('stock')
@@ -90,9 +118,31 @@
                             <i class="ph-bold ph-check-circle me-1"></i> Update Product
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 @endsection
+
+@push('scripts')
+<script>
+    function previewImage(input) {
+        const preview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('uploadPlaceholder');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.style.backgroundImage = `url('${e.target.result}')`;
+                preview.style.backgroundSize = 'cover';
+                preview.style.backgroundPosition = 'center';
+                placeholder.style.display = 'none';
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+@endpush
