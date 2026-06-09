@@ -169,6 +169,11 @@ class ProductsController extends Controller
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_path);
             }
             $data['image_path'] = $request->file('image')->store('products', 'public');
+        } elseif ($request->input('remove_image') == '1') {
+            if ($product->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($product->image_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = null;
         }
 
         $product->update($data);
