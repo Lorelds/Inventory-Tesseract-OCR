@@ -42,6 +42,9 @@
                 <a href="{{ route('payments.index') }}" class="{{ request()->routeIs('payments.*') ? 'active' : '' }}">
                     <i class="ph ph-wallet fs-5"></i> {{ __('Payments History') }}
                 </a>
+                <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                    <i class="ph ph-chart-bar fs-5"></i> {{ __('Reports') }}
+                </a>
             </nav>
         </aside>
 

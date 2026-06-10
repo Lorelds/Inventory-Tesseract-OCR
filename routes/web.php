@@ -63,6 +63,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/store/{store}', [\App\Http\Controllers\PaymentController::class, 'showStore'])->name('showStore');
     });
 
+    // Reports Routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
+        Route::post('/generate', [\App\Http\Controllers\ReportController::class, 'generate'])->name('generate');
+    });
+
     // Breeze Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
